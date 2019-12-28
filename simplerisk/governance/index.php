@@ -16,37 +16,25 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-  // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
     session_name('SimpleRisk');
     session_start();
 }
 
 // Include the language file
 require_once(language_file());
-
-function csrf_startup() {
-    csrf_conf('rewrite-js', "realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.js')");
-}
 
 // Check for session timeout or renegotiation
 session_check();
@@ -58,6 +46,10 @@ if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
     header("Location: ../index.php");
     exit(0);
 }
+
+// Include the CSRF-magic library
+// Make sure it's called after the session is properly setup
+include_csrf_magic();
 
 // Enforce that the user has access to governance
 enforce_permission_governance();
@@ -78,8 +70,13 @@ if (isset($_POST['add_framework']))
   // Otherwise
   else
   {
+    if(empty($_SESSION['add_new_frameworks']))
+    {
+        // Display an alert
+        set_alert(true, "bad", $escaper->escapeHtml($lang['NoAddFrameworkPermission']));
+    }
     // Insert a new framework up to 100 chars
-    if(add_framework($name, $descripiton, $parent)){
+    elseif(add_framework($name, $descripiton, $parent)){
         // Display an alert
         set_alert(true, "good", $escaper->escapeHtml($lang['FrameworkAdded']));
     }else{
@@ -108,11 +105,17 @@ if (isset($_POST['update_framework']))
   // Otherwise
   else
   {
+    // Check if user has a permission to modify framework
+    if(empty($_SESSION['modify_frameworks'])){
+        set_alert(true, "bad", $escaper->escapeHtml($lang['NoModifyFrameworkPermission']));
+    }
     // Insert a new framework up to 100 chars
-    if(update_framework($framework_id, $name, $descripiton, $parent)){
+    elseif(update_framework($framework_id, $name, $descripiton, $parent))
+    {
         // Display an alert
         set_alert(true, "good", $escaper->escapeHtml($lang['FrameworkUpdated']));
-    }else{
+    }
+    else{
         // Display an alert
         set_alert(true, "bad", $escaper->escapeHtml($lang['FrameworkNameExist']));
     }
@@ -129,16 +132,30 @@ if (isset($_POST['delete_framework']))
   // Verify value is an integer
   if (is_int($value))
   {
+    // If user has no permission for modify frameworks
+    if(empty($_SESSION['delete_frameworks']))
+    {
+      set_alert(true, "bad", $escaper->escapeHtml($lang['NoDeleteFrameworkPermission']));
+    }
     // If the framework ID is 0 (ie. Unassigned Risks)
-    if ($value == 0)
+    elseif ($value == 0)
     {
       // Display an alert
       set_alert(true, "bad", "You cannot delete the Unassigned framework.  Sorry.");
     }
     else
     {
-      // Delete the framework
-      delete_frameworks($value);
+      // If the ucf extra is enabled
+      if (ucf_extra())
+      {
+          // Include the ucf extra
+          require_once(realpath(__DIR__ . '/../extras/ucf/index.php'));
+
+          // Uninstall the ucf framework (which will also delete it)
+          uninstall_ucf_frameworks($value);
+      }
+      // Otherwise just delete the framework
+      else delete_frameworks($value);
 
       // Display an alert
       set_alert(true, "good", "An existing framework was deleted successfully.");
@@ -152,20 +169,6 @@ if (isset($_POST['delete_framework']))
   }
   
   refresh();
-}
-
-// Delete if a new framework was submitted
-if (isset($_POST['update_framework_status']))
-{
-  // For each framework
-    // Update its framework status
-    $status_id  = $_POST['status'];
-    $framework_id = $_POST['framework_id'];
-    update_framework_status($status_id, $framework_id);
-
-    // Display an alert
-    set_alert(true, "good", "The framework statuses were successfully updated.");
-    exit;
 }
 
 // Check if a new control was submitted
@@ -195,11 +198,20 @@ if (isset($_POST['add_control']))
   // Otherwise
   else
   {
+    // If user has no permission for add new controls
+    if(empty($_SESSION['add_new_controls']))
+    {
+        // Display an alert
+        set_alert(true, "bad", $escaper->escapeHtml($lang['NoAddControlPermission']));
+    }
     // Insert a new control up to 100 chars
-    if(add_framework_control($control)){
+    elseif(add_framework_control($control))
+    {
         // Display an alert
         set_alert(true, "good", "A new control was added successfully.");
-    }else{
+    }
+    else
+    {
         // Display an alert
         set_alert(true, "bad", "The control already exists.");
     }
@@ -209,13 +221,19 @@ if (isset($_POST['add_control']))
   refresh();
 }
 
-// Delete if a new control was submitted
+// Delete if a delete control was submitted
 if (isset($_POST['delete_control']))
 {
   $value = (int)$_POST['control_id'];
 
+  // If user has no permission for delete controls
+  if(empty($_SESSION['delete_controls']))
+  {
+      // Display an alert
+      set_alert(true, "bad", $escaper->escapeHtml($lang['NoDeleteControlPermission']));
+  }
   // Verify value is an integer
-  if (is_int($value))
+  elseif (is_int($value))
   {
       // Delete the control
       delete_framework_control($value);
@@ -234,13 +252,52 @@ if (isset($_POST['delete_control']))
   refresh();
 }
 
+// If delete controls were submitted
+if (isset($_POST['delete_controls']))
+{
+  $control_ids = $_POST['control_ids'];
+
+  // If user has no permission for delete controls
+  if(empty($_SESSION['delete_controls']))
+  {
+      // Display an alert
+      set_alert(true, "bad", $escaper->escapeHtml($lang['NoDeleteControlPermission']));
+  }
+  // Verify control ids for deleting was submitted
+  elseif (is_array($control_ids))
+  {
+      foreach($control_ids as $control_id){
+          // Delete the control
+          delete_framework_control($control_id);
+      }
+
+      // Display an alert
+      set_alert(true, "good", "An selected controls were deleted successfully.");
+  }
+  // We should never get here as we bound the variable as an int
+  else
+  {
+    // Display an alert
+    set_alert(true, "bad", "Nothing controls for deleting were selected.");
+  }
+  
+  // Refresh current page
+  refresh();
+}
+
 // Update if a control was updated
 if (isset($_POST['update_control']))
 {
   $control_id = (int)$_POST['control_id'];
 
+  // If user has no permission to modify controls
+  if(empty($_SESSION['modify_controls']))
+  {
+      // Display an alert
+      set_alert(true, "bad", $escaper->escapeHtml($lang['NoModifyControlPermission']));
+  }
   // Verify value is an integer
-  if (is_int($control_id))
+  elseif (is_int($control_id))
   {
       $control = array(
         'short_name' => isset($_POST['short_name']) ? $_POST['short_name'] : "",
@@ -276,7 +333,7 @@ if (isset($_POST['update_control']))
 ?>
 
 <!doctype html>
-<html>
+<html lang="<?php echo $escaper->escapehtml($_SESSION['lang']); ?>" xml:lang="<?php echo $escaper->escapeHtml($_SESSION['lang']); ?>">
 
 <head>
   <script src="../js/jquery.min.js"></script>
@@ -289,6 +346,7 @@ if (isset($_POST['update_control']))
   <script src="../js/bootstrap-multiselect.js"></script>
   <script src="../js/jquery.dataTables.js"></script>
   <script src="../js/pages/governance.js"></script>
+  <script src="../js/common.js"></script>
 
   <title>SimpleRisk: Enterprise Risk Management Simplified</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -307,7 +365,9 @@ if (isset($_POST['update_control']))
   <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="../css/theme.css">
 
-
+  <?php
+      setup_alert_requirements("..");
+  ?>
   <?php
     // Get the frameworks
     $frameworks = get_frameworks();
@@ -330,6 +390,7 @@ if (isset($_POST['update_control']))
         $(document).ready(function(){
             var $tabs = $( "#frameworks-tab-content, #controls-tab-content" ).tabs({
                 activate: function(event, ui){
+                    fixTreeGridCollapsableColumn();
                     $(".framework-table").treegrid('resize');
                 }
             })
@@ -380,42 +441,66 @@ if (isset($_POST['update_control']))
                 // Create multiselect instance in Updating modal of framework control 
                 $("#frameworks").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['AllFrameworks']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 // Create multiselect instance in Adding modal of framework control 
                 $("#add_framework_ids").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['AllFrameworks']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 $("#filter_by_control_owner").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['ALL']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 $("#filter_by_control_class").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['ALL']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 $("#filter_by_control_phase").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['ALL']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 $("#filter_by_control_family").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['ALL']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 $("#filter_by_control_framework").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['ALL']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
 
                 $("#filter_by_control_priority").multiselect({
                     allSelectedText: '<?php echo $escaper->escapeHtml($lang['ALL']); ?>',
+                    enableFiltering: true,
+                    maxHeight: 250,
+                    buttonWidth: '100%',
                     includeSelectAllOption: true
                 });
             });
@@ -460,7 +545,6 @@ if (isset($_POST['update_control']))
         <?php view_governance_menu("DefineControlFrameworks"); ?>
       </div>
       <div class="span9">
-        <div id="show-alert"></div>
         <div class="row-fluid">
           <div class="span12">
             <!--  Frameworks container Begin -->
@@ -591,22 +675,26 @@ if (isset($_POST['update_control']))
                     </div>
                 </div>
                 
-              <div class="status-tabs" >
-                <a href="#control--add" role="button" data-toggle="modal" class="control--add"><i class="fa fa-plus"></i></a>
-                <ul class="clearfix tabs-nav">
-                  <li><a href="#active-controls" class="status" data-status="1"><?php echo $escaper->escapeHtml($lang['Controls']); ?> <span id="controls_count"></span></a></li>
-                </ul>
-              </div> <!-- status-tabs -->
+                <form action="" name="controls_form" method="POST" id="controls-form">
+                    <div class="status-tabs" >
+                        <a href="#control--add" role="button" data-toggle="modal" class="control--add"><i class="fa fa-plus"></i></a>
+                        <ul class="clearfix tabs-nav">
+                            <li><a href="#active-controls" class="status" data-status="1"><?php echo $escaper->escapeHtml($lang['Controls']); ?> <span id="controls_count"></span></a></li>
+                        </ul>
+                        <input type="hidden" name="delete_controls" value="1">
+                        <button type="submit" id="delete-controls-btn" class="btn"><?php echo $escaper->escapeHtml($lang['DeleteControls']) ?></button>
+                    </div> <!-- status-tabs -->
 
-              <table id="active-controls" class="" width="100%">
-                <thead style='display:none;'>
-                    <tr>
-                        <th>&nbsp;</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
+                    <table id="active-controls" class="" width="100%">
+                        <thead style='display:none;'>
+                            <tr>
+                                <th>&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </form>
             
             </div>
             <!-- Controls container Ends -->
@@ -616,200 +704,251 @@ if (isset($_POST['update_control']))
       </div>
     </div>
   </div>
-          
-<!-- MODEL WINDOW FOR ADDING FRAMEWORK -->
-<div id="framework--add" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="framework--add" aria-hidden="true">
-  <div class="modal-body">
-
-    <form class="" id="framework--new" action="#" method="post" autocomplete="off">
-      <div class="form-group">
-        <label for=""><?php echo $escaper->escapeHtml($lang['NewFrameworkName']); ?></label>
-        <input type="text" required name="new_framework" id="new_framework" value="" class="form-control" autocomplete="off">
-        <label for=""><?php echo $escaper->escapeHtml($lang['ParentFramework']); ?></label>
-        <div class="parent_frameworks_container">
-        </div>
+  
+  <script type="">
+    $(document).ready(function(){
+        $("body").on("click", "#active-controls .checkbox-in-div input[type=checkbox]", function(){
+            if(this.checked)
+                $(this).closest(".control-block--header").addClass("selected-background");
+            else
+                $(this).closest(".control-block--header").removeClass("selected-background");
+        })
         
-        <label for=""><?php echo $escaper->escapeHtml($lang['NewFrameworkDescription']); ?></label>
-        <textarea name="new_framework_description" id="new_framework_description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
-      </div>
-      
-      <div class="form-group text-right">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-        <button type="submit" name="add_framework" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Add']); ?></button>
-      </div>
-    </form>
+        $("#controls-form").submit(function(){
+            if($("#active-controls .checkbox-in-div input[type=checkbox]:checked").length > 0){
+                confirm("<?php echo $escaper->escapeHtml($lang["AreYouSureYouWantToDeleteControls"]); ?>", "submit_controls_form()");
+                return false;
+            }else{
+                alert("<?php echo $escaper->escapeHtml($lang['SelectControlsToDelete']); ?>")
+                return false;
+            }
+        })
 
-  </div>
-</div>
+        //Have to remove the 'fade' class for the shown event to work for modals
+        $('.modal').on('shown.bs.modal', function() {
+            $(this).find('.modal-body').scrollTop(0);
+        });
+    })
+    function submit_controls_form(){
+        document.controls_form.submit();
+    }
+  </script>
+  
+    <!-- MODEL WINDOW FOR ADDING FRAMEWORK -->
+    <div id="framework--add" class="modal hide no-padding" tabindex="-1" role="dialog" aria-labelledby="framework--add" aria-hidden="true">
+        <form class="" id="framework--new" action="#" method="post" autocomplete="off">
 
-<!-- MODEL WINDOW FOR EDITING FRAMEWORK -->
-<div id="framework--update" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-body">
-
-    <form class="" action="#" method="post" autocomplete="off">
-        <input type="hidden" class="framework_id" name="framework_id" value=""> 
-        <div class="form-group">
-            <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkName']); ?></label>
-            <input type="text" required name="framework_name" value="" class="form-control" autocomplete="off">
-            <label for=""><?php echo $escaper->escapeHtml($lang['ParentFramework']); ?></label>
-            <div class="parent_frameworks_container">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['NewFramework']); ?></h4>
             </div>
 
-            <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkDescription']); ?></label>
-            <textarea name="framework_description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['NewFrameworkName']); ?></label>
+                    <input type="text" required name="new_framework" id="new_framework" value="" class="form-control" autocomplete="off">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ParentFramework']); ?></label>
+                    <div class="parent_frameworks_container">
+                    </div>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['NewFrameworkDescription']); ?></label>
+                    <textarea name="new_framework_description" id="new_framework_description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+                <button type="submit" name="add_framework" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Add']); ?></button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- MODEL WINDOW FOR EDITING FRAMEWORK -->
+    <div id="framework--update" class="modal hide no-padding" tabindex="-1" role="dialog" aria-hidden="true">
+        <form class="" action="#" method="post" autocomplete="off">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['EditFramework']); ?></h4>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" class="framework_id" name="framework_id" value=""> 
+                <div class="form-group">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkName']); ?></label>
+                    <input type="text" required name="framework_name" value="" class="form-control" autocomplete="off">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ParentFramework']); ?></label>
+                    <div class="parent_frameworks_container">
+                    </div>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkDescription']); ?></label>
+                    <textarea name="framework_description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+                <button type="submit" name="update_framework" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- MODEL WINDOW FOR FRAMEWORK DELETE CONFIRM -->
+    <div id="framework--delete" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="framework-delete-form" aria-hidden="true">
+        <div class="modal-body">
+
+            <form class="" id="framework-delete-form" action="" method="post">
+                <div class="form-group text-center">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['AreYouSureYouWantToDeleteThisFramework']); ?></label>
+                    <input type="hidden" class="delete-id" name="framework_id" value="" />
+                </div>
+
+                <div class="form-group text-center project-delete-actions">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+                    <button type="submit" name="delete_framework" class="delete_project btn btn-danger"><?php echo $escaper->escapeHtml($lang['Yes']); ?></button>
+                </div>
+            </form>
+
         </div>
+    </div>
 
-        <div class="form-group text-right">
-            <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-            <button type="submit" name="update_framework" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
+    <!-- MODEL WINDOW FOR ADDING CONTROL -->
+    <div id="control--add" class="modal hide no-padding" tabindex="-1" role="dialog" aria-labelledby="control--add" aria-hidden="true">
+        <form class="" id="control--new" action="#controls-tab" method="post" autocomplete="off">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['NewControl']); ?></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlShortName']); ?></label>
+                    <input type="text" name="short_name" value="" class="form-control">
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlLongName']); ?></label>
+                    <input type="text" name="long_name" value="" class="form-control">
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlDescription']); ?></label>
+                    <textarea name="description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['SupplementalGuidance']); ?></label>
+                    <textarea name="supplemental_guidance" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlOwner']); ?></label>
+                    <?php create_dropdown("enabled_users", NULL, "control_owner", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlFrameworks']); ?></label>
+                    <?php create_multiple_dropdown("frameworks", NULL, "add_framework_ids"); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlClass']); ?></label>
+                    <?php create_dropdown("control_class", NULL, "control_class", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlPhase']); ?></label>
+                    <?php create_dropdown("control_phase", NULL, "control_phase", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlNumber']); ?></label>
+                    <input type="text" name="control_number" value="" class="form-control">
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlPriority']); ?></label>
+                    <?php create_dropdown("control_priority", NULL, "control_priority", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlFamily']); ?></label>
+                    <?php create_dropdown("family", NULL, "family", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['MitigationPercent']); ?></label>
+                    <input type="number" min="0" max="100" name="mitigation_percent" value="" class="form-control">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+                <button type="submit" name="add_control" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Add']); ?></button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- MODEL WINDOW FOR UPDATING CONTROL -->
+    <div id="control--update" class="modal hide no-padding" tabindex="-1" role="dialog" aria-labelledby="control--update" aria-hidden="true">
+        <form class="" id="update-control-form" action="#controls-tab" method="post" autocomplete="off">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['EditControl']); ?></h4>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" class="control_id" name="control_id" value=""> 
+                <div class="form-group">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlShortName']); ?></label>
+                    <input type="text" name="short_name" value="" class="form-control">
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlLongName']); ?></label>
+                    <input type="text" name="long_name" value="" class="form-control">
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlDescription']); ?></label>
+                    <textarea name="description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['SupplementalGuidance']); ?></label>
+                    <textarea name="supplemental_guidance" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlOwner']); ?></label>
+                    <?php create_dropdown("enabled_users", NULL, "control_owner", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlFrameworks']); ?></label>
+                    <?php create_multiple_dropdown("frameworks", NULL); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlClass']); ?></label>
+                    <?php create_dropdown("control_class", NULL, "control_class", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlPhase']); ?></label>
+                    <?php create_dropdown("control_phase", NULL, "control_phase", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlNumber']); ?></label>
+                    <input type="text" name="control_number" value="" class="form-control">
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlPriority']); ?></label>
+                    <?php create_dropdown("control_priority", NULL, "control_priority", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ControlFamily']); ?></label>
+                    <?php create_dropdown("family", NULL, "family", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['MitigationPercent']); ?></label>
+                    <input type="number" min="0" max="100" name="mitigation_percent" value="" class="form-control">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+                <button type="submit" name="update_control" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- MODEL WINDOW FOR CONTROL DELETE CONFIRM -->
+    <div id="control--delete" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="control--delete" aria-hidden="true">
+        <div class="modal-body">
+
+            <form class="" id="control--delete" action="" method="post">
+                <div class="form-group text-center">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['AreYouSureYouWantToDeleteThisControl']); ?></label>
+                    <input type="hidden" class="delete-id" name="control_id" value="" />
+                </div>
+
+                <div class="form-group text-center control-delete-actions">
+                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+                    <button type="submit" name="delete_control" class="delete_control btn btn-danger"><?php echo $escaper->escapeHtml($lang['Yes']); ?></button>
+                </div>
+            </form>
+
         </div>
-    </form>
+    </div>
 
-  </div>
-</div>
-
-<!-- MODEL WINDOW FOR PROJECT DELETE CONFIRM -->
-<div id="framework--delete" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="framework-delete-form" aria-hidden="true">
-  <div class="modal-body">
-
-    <form class="" id="framework-delete-form" action="" method="post">
-      <div class="form-group text-center">
-        <label for=""><?php echo $escaper->escapeHtml($lang['AreYouSureYouWantToDeleteThisFramework']); ?></label>
-        <input type="hidden" name="framework_id" value="" />
-      </div>
-
-      <div class="form-group text-center project-delete-actions">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-        <button type="submit" name="delete_framework" class="delete_project btn btn-danger"><?php echo $escaper->escapeHtml($lang['Yes']); ?></button>
-      </div>
-    </form>
-
-  </div>
-</div>
-
-<!-- MODEL WINDOW FOR ADDING CONTROL -->
-<div id="control--add" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="control--add" aria-hidden="true">
-  <div class="modal-body">
-
-    <form class="" id="control--new" action="#controls-tab" method="post" autocomplete="off">
-      <div class="form-group">
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlShortName']); ?></label>
-        <input type="text" name="short_name" value="" class="form-control">
-        
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlLongName']); ?></label>
-        <input type="text" name="long_name" value="" class="form-control">
-        
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlDescription']); ?></label>
-        <textarea name="description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
-        
-        <label for=""><?php echo $escaper->escapeHtml($lang['SupplementalGuidance']); ?></label>
-        <textarea name="supplemental_guidance" value="" class="form-control" rows="6" style="width:100%;"></textarea>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlOwner']); ?></label>
-        <?php create_dropdown("user", NULL, "control_owner", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlFrameworks']); ?></label>
-        <?php create_multiple_dropdown("frameworks", NULL, "add_framework_ids"); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlClass']); ?></label>
-        <?php create_dropdown("control_class", NULL, "control_class", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlPhase']); ?></label>
-        <?php create_dropdown("control_phase", NULL, "control_phase", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlNumber']); ?></label>
-        <input type="text" name="control_number" value="" class="form-control">
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlPriority']); ?></label>
-        <?php create_dropdown("control_priority", NULL, "control_priority", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlFamily']); ?></label>
-        <?php create_dropdown("family", NULL, "family", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['MitigationPercent']); ?></label>
-        <input type="number" min="0" max="100" name="mitigation_percent" value="" class="form-control">
-      </div>
-      
-      <div class="form-group text-right">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-        <button type="submit" name="add_control" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Add']); ?></button>
-      </div>
-    </form>
-
-  </div>
-</div>
-
-<!-- MODEL WINDOW FOR UPDATING CONTROL -->
-<div id="control--update" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="control--update" aria-hidden="true">
-  <div class="modal-body">
-    <form class="" id="control--new" action="#controls-tab" method="post" autocomplete="off">
-        <input type="hidden" class="control_id" name="control_id" value=""> 
-      <div class="form-group">
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlShortName']); ?></label>
-        <input type="text" name="short_name" value="" class="form-control">
-        
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlLongName']); ?></label>
-        <input type="text" name="long_name" value="" class="form-control">
-        
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlDescription']); ?></label>
-        <textarea name="description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
-        
-        <label for=""><?php echo $escaper->escapeHtml($lang['SupplementalGuidance']); ?></label>
-        <textarea name="supplemental_guidance" value="" class="form-control" rows="6" style="width:100%;"></textarea>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlOwner']); ?></label>
-        <?php create_dropdown("user", NULL, "control_owner", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlFrameworks']); ?></label>
-        <?php create_multiple_dropdown("frameworks", NULL); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlClass']); ?></label>
-        <?php create_dropdown("control_class", NULL, "control_class", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlPhase']); ?></label>
-        <?php create_dropdown("control_phase", NULL, "control_phase", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlNumber']); ?></label>
-        <input type="text" name="control_number" value="" class="form-control">
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlPriority']); ?></label>
-        <?php create_dropdown("control_priority", NULL, "control_priority", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['ControlFamily']); ?></label>
-        <?php create_dropdown("family", NULL, "family", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
-
-        <label for=""><?php echo $escaper->escapeHtml($lang['MitigationPercent']); ?></label>
-        <input type="number" min="0" max="100" name="mitigation_percent" value="" class="form-control">
-      </div>
-      
-      <div class="form-group text-right">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-        <button type="submit" name="update_control" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
-      </div>
-    </form>
-
-  </div>
-</div>
-
-<!-- MODEL WINDOW FOR CONTROL DELETE CONFIRM -->
-<div id="control--delete" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="control--delete" aria-hidden="true">
-  <div class="modal-body">
-
-    <form class="" id="control--delete" action="" method="post">
-      <div class="form-group text-center">
-        <label for=""><?php echo $escaper->escapeHtml($lang['AreYouSureYouWantToDeleteThisControl']); ?></label>
-        <input type="hidden" name="control_id" value="" />
-      </div>
-
-      <div class="form-group text-center control-delete-actions">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-        <button type="submit" name="delete_control" class="delete_control btn btn-danger"><?php echo $escaper->escapeHtml($lang['Yes']); ?></button>
-      </div>
-    </form>
-
-  </div>
-</div>
-
+    <?php display_set_default_date_format_script(); ?>
 </body>
 
 </html>

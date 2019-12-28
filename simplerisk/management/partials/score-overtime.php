@@ -18,22 +18,23 @@ header("X-XSS-Protection: 1; mode=block");
 if (csp_enabled())
 {
   // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
+  header("Content-Security-Policy: default-src 'self' 'unsafe-inline' *.highcharts.com *.googleapis.com *.gstatic.com *.jquery.com;");
 }
 
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
 
 if (!isset($_SESSION))
 {
-        session_name('SimpleRisk');
-        session_start();
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+    session_name('SimpleRisk');
+    session_start();
 }
 
 // Include the language file
@@ -77,6 +78,7 @@ enforce_permission_riskmanagement();
 </div>
 
 <input type="hidden" id="_RiskScoringHistory" value="<?php echo $lang['RiskScoringHistory']; ?>">
-<input type="hidden" id="_RiskScore" value="<?php echo $lang['RiskScore']; ?>">
+<input type="hidden" id="_RiskScore" value="<?php echo $lang['InherentRisk']; ?>">
+<input type="hidden" id="_ResidualRiskScore" value="<?php echo $lang['ResidualRisk']; ?>">
 <input type="hidden" id="_DateAndTime" value="<?php echo $lang['DateAndTime']; ?>">
 

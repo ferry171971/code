@@ -18,22 +18,22 @@ header("X-XSS-Protection: 1; mode=block");
 if (csp_enabled())
 {
   // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
+  header("Content-Security-Policy: default-src 'self' 'unsafe-inline' *.highcharts.com *.googleapis.com *.gstatic.com *.jquery.com;");
 }
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
 
 if (!isset($_SESSION))
 {
-        session_name('SimpleRisk');
-        session_start();
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+    session_name('SimpleRisk');
+    session_start();
 }
 
 // Include the language file
@@ -60,9 +60,9 @@ enforce_permission_riskmanagement();
     <div id="tabs" class="risk-details">
       <div class="row-fluid tab-wrapper">
         <ul class="tabs-nav clearfix">
-          <li><a id="tab_details" href="#tabs1">Details</a></li>
-          <li><a id="tab_mitigation" href="#tabs2">Mitigation</a></li>
-          <li><a id="tab_review" class="tabList" href="#tabs3">Review</a></li>
+          <li><a id="tab_details" href="#tabs1"><?php echo $escaper->escapeHtml($lang['Details']); ?></a></li>
+          <li><a id="tab_mitigation" href="#tabs2"><?php echo $escaper->escapeHtml($lang['Mitigation']); ?></a></li>
+          <li><a id="tab_review" class="tabList" href="#tabs3"><?php echo $escaper->escapeHtml($lang['Review']); ?></a></li>
         </ul>
 
         <div class="row-fluid">
@@ -82,12 +82,12 @@ enforce_permission_riskmanagement();
                 // If the user has selected to edit the risk
                 if (isset($_POST['edit_details']) || (isset($action) && $action == 'editdetail'))
                 {
-                  edit_risk_details($id, $submission_date,$submitted_by, $subject, $reference_id, $regulation, $control_number, $location, $source, $category, $team, $additional_stakeholders, $technology, $owner, $manager, $assessment, $notes,  $scoring_method, $CLASSIC_likelihood, $CLASSIC_impact, $AccessVector, $AccessComplexity, $Authentication, $ConfImpact, $IntegImpact, $AvailImpact, $Exploitability, $RemediationLevel, $ReportConfidence, $CollateralDamagePotential, $TargetDistribution, $ConfidentialityRequirement, $IntegrityRequirement, $AvailabilityRequirement, $DREADDamagePotential, $DREADReproducibility, $DREADExploitability, $DREADAffectedUsers, $DREADDiscoverability, $OWASPSkillLevel, $OWASPMotive, $OWASPOpportunity, $OWASPSize, $OWASPEaseOfDiscovery, $OWASPEaseOfExploit, $OWASPAwareness, $OWASPIntrusionDetection, $OWASPLossOfConfidentiality, $OWASPLossOfIntegrity, $OWASPLossOfAvailability, $OWASPLossOfAccountability, $OWASPFinancialDamage, $OWASPReputationDamage, $OWASPNonCompliance, $OWASPPrivacyViolation, $custom);
+                  edit_risk_details($id, $submission_date,$submitted_by, $subject, $reference_id, $regulation, $control_number, $location, $source, $category, $team, $additional_stakeholders, $technology, $owner, $manager, $assessment, $notes,  $scoring_method, $CLASSIC_likelihood, $CLASSIC_impact, $AccessVector, $AccessComplexity, $Authentication, $ConfImpact, $IntegImpact, $AvailImpact, $Exploitability, $RemediationLevel, $ReportConfidence, $CollateralDamagePotential, $TargetDistribution, $ConfidentialityRequirement, $IntegrityRequirement, $AvailabilityRequirement, $DREADDamagePotential, $DREADReproducibility, $DREADExploitability, $DREADAffectedUsers, $DREADDiscoverability, $OWASPSkillLevel, $OWASPMotive, $OWASPOpportunity, $OWASPSize, $OWASPEaseOfDiscovery, $OWASPEaseOfExploit, $OWASPAwareness, $OWASPIntrusionDetection, $OWASPLossOfConfidentiality, $OWASPLossOfIntegrity, $OWASPLossOfAvailability, $OWASPLossOfAccountability, $OWASPFinancialDamage, $OWASPReputationDamage, $OWASPNonCompliance, $OWASPPrivacyViolation, $custom, $ContributingLikelihood, $ContributingImpacts, $risk_tags_for_edit, $jira_issue_key);
                 }
                 // Otherwise we are just viewing the risk
                 else
                 {
-                  view_risk_details($id, $submission_date, $submitted_by, $subject, $reference_id, $regulation, $control_number, $location, $source, $category, $team, $additional_stakeholders, $technology, $owner, $manager, $assessment, $notes,  $scoring_method, $CLASSIC_likelihood, $CLASSIC_impact);
+                  view_risk_details($id, $submission_date, $submitted_by, $subject, $reference_id, $regulation, $control_number, $location, $source, $category, $team, $additional_stakeholders, $technology, $owner, $manager, $assessment, $notes,  $scoring_method, $CLASSIC_likelihood, $CLASSIC_impact, $risk_tags, $jira_issue_key);
                 }
                 ?>
                 <input type="hidden" class="risk_id" value="<?php echo $id; ?>">
@@ -121,10 +121,11 @@ enforce_permission_riskmanagement();
 <!--                      <form name="review" method="post" action="">-->
                 <?php
                     if (isset($action) && $action == 'editreview'){
-                        edit_review_submission($id, $review, $next_step, $next_review, $comments, $default_next_review);
+                        $default_next_review = get_next_review_default($id-1000);
+                        edit_review_submission($id, $review_id, $review, $next_step, $next_review, $comments, $default_next_review);
                     }
 		else{
-                        view_review_details($id, $review_date, $reviewer, $review, $next_step, $next_review, $comments);
+                        view_review_details($id, $review_id, $review_date, $reviewer, $review, $next_step, $next_review, $comments);
                     }
                 ?>
 <!--                      </form>-->
@@ -172,7 +173,7 @@ enforce_permission_riskmanagement();
             <div class="collapsible">
               <div class="row-fluid">
                 <div class="span12 audit-trail">
-                  <?php get_audit_trail($id,36500,'risk'); ?>
+                  <?php get_audit_trail_html($id, 36500, ['risk', 'jira']); ?>
                 </div>
               </div>
             </div>
@@ -183,6 +184,10 @@ enforce_permission_riskmanagement();
     </div>
 
     <input type="hidden" id="_token_value" value="<?php echo csrf_get_tokens(); ?>">
-    <input type="hidden" id="_lang_reopen_risk" value="<?php echo $lang['ReopenRisk']; ?>">
-    <input type="hidden" id="_lang_close_risk" value="<?php echo $lang['CloseRisk']; ?>">
+    <input type="hidden" id="_lang_reopen_risk" value="<?php echo $escaper->escapeHtml($lang['ReopenRisk']); ?>">
+    <input type="hidden" id="_lang_close_risk" value="<?php echo $escaper->escapeHtml($lang['CloseRisk']); ?>">
+    <input type="hidden" id="_lang_accepting" value="<?php echo $escaper->escapeHtml($lang['Accepting']); ?>">
+    <input type="hidden" id="_lang_accept_mitigation" value="<?php echo $escaper->escapeHtml($lang['AcceptMitigation']); ?>">
+    <input type="hidden" id="_lang_rejecting" value="<?php echo $escaper->escapeHtml($lang['Rejecting']); ?>">
+    <input type="hidden" id="_lang_reject_mitigation" value="<?php echo $escaper->escapeHtml($lang['RejectMitigation']); ?>">
     

@@ -1,124 +1,171 @@
 <?php
-        /* This Source Code Form is subject to the terms of the Mozilla Public
-         * License, v. 2.0. If a copy of the MPL was not distributed with this
-         * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+    /* This Source Code Form is subject to the terms of the Mozilla Public
+     * License, v. 2.0. If a copy of the MPL was not distributed with this
+     * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-        // Include required functions file
-        require_once(realpath(__DIR__ . '/../includes/functions.php'));
-        require_once(realpath(__DIR__ . '/../includes/authenticate.php'));
-        require_once(realpath(__DIR__ . '/../includes/display.php'));
-        require_once(realpath(__DIR__ . '/../includes/alerts.php'));
+    // Include required functions file
+    require_once(realpath(__DIR__ . '/../includes/functions.php'));
+    require_once(realpath(__DIR__ . '/../includes/authenticate.php'));
+    require_once(realpath(__DIR__ . '/../includes/display.php'));
+    require_once(realpath(__DIR__ . '/../includes/alerts.php'));
 
-        // Include Zend Escaper for HTML Output Encoding
-        require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'));
-        $escaper = new Zend\Escaper\Escaper('utf-8');
+    // Include Zend Escaper for HTML Output Encoding
+    require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'));
+    $escaper = new Zend\Escaper\Escaper('utf-8');
 
-        // Add various security headers
-        header("X-Frame-Options: DENY");
-        header("X-XSS-Protection: 1; mode=block");
+    // Add various security headers
+    add_security_headers();
 
-        // If we want to enable the Content Security Policy (CSP) - This may break Chrome
-        if (csp_enabled())
-        {
-                // Add the Content-Security-Policy header
-		header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-        }
-
+    if (!isset($_SESSION))
+    {
         // Session handler is database
         if (USE_DATABASE_FOR_SESSIONS == "true")
         {
-		session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+            session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
         }
 
         // Start the session
-	    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+        session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
 
-        if (!isset($_SESSION))
+        session_name('SimpleRisk');
+        session_start();
+    }
+
+    // Include the language file
+    require_once(language_file());
+
+    // Check for session timeout or renegotiation
+    session_check();
+
+    // Check if access is authorized
+    if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
+    {
+        set_unauthenticated_redirect();
+        header("Location: ../index.php");
+        exit(0);
+    }
+
+    // Check if access is authorized
+    if (!isset($_SESSION["admin"]) || $_SESSION["admin"] != "1")
+    {
+        header("Location: ../index.php");
+        exit(0);
+    }
+
+    // Include the CSRF-magic library
+    // Make sure it's called after the session is properly setup
+    include_csrf_magic();
+
+    // Check if the risk formula update was submitted
+    if (isset($_POST['update_risk_formula']))
+    {
+        $risk_model = (int)$_POST['risk_models'];
+        
+        // Check if risk model value is integer
+        if (is_int($risk_model))
         {
-        	session_name('SimpleRisk');
-        	session_start();
-        }
-
-        // Include the language file
-        require_once(language_file());
-
-	    require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
-
-        // Check for session timeout or renegotiation
-        session_check();
-
-        // Check if access is authorized
-        if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
-        {
-		set_unauthenticated_redirect();
-                header("Location: ../index.php");
-                exit(0);
-        }
-
-        // Check if access is authorized
-        if (!isset($_SESSION["admin"]) || $_SESSION["admin"] != "1")
-        {
-                header("Location: ../index.php");
-                exit(0);
-        }
-
-        // Check if the risk level update was submitted
-        if (isset($_POST['update_risk_levels']))
-        {
-            $level = $_POST['level'];
-		    $veryhigh = $level['Very High'];
-            $high = $level['High'];
-            $medium = $level['Medium'];
-            $low = $level['Low'];
-            $risk_model = (int)$_POST['risk_models'];
-
-            // Check if all values are integers
-            if (is_numeric($veryhigh['value']) && is_numeric($high['value']) && is_numeric($medium['value']) && is_numeric($low['value']) && is_int($risk_model))
+            // Risk model should be between 1 and 5
+            if ((1 <= $risk_model) && ($risk_model <= 6))
             {
-                // Check if low < medium < high < very high
-                if (($low['value'] < $medium['value']) && ($medium['value'] < $high) && ($high['value'] < $veryhigh['value']))
-                {
-                    // Update the risk level
-                    update_risk_levels($veryhigh, $high, $medium, $low);
+                // Update the risk model
+                update_risk_model($risk_model);
 
-				    // Risk model should be between 1 and 5
-				    if ((1 <= $risk_model) && ($risk_model <= 5))
-				    {
-					    // Update the risk model
-					    update_risk_model($risk_model);
-
-					    // Display an alert
-					    set_alert(true, "good", "The configuration was updated successfully.");
-				    }
-                    // Otherwise, there was a problem
-                    else
-                    {
-				        // Display an alert
-				        set_alert(true, "bad", "The risk formula submitted was an invalid value.");
-                    }
-                }
-			    // Otherwise, there was a problem
-			    else
-			    {
-				    // Display an alert
-				    set_alert(true, "bad", "Your LOW risk needs to be less than your MEDIUM risk which needs to be less than your HIGH risk which needs to be less than your VERY HIGH risk.");
-			    }
+                // Display an alert
+                set_alert(true, "good", "The configuration was updated successfully.");
+                
+                refresh();
             }
-		    // Otherwise, there was a problem
-		    else
-		    {
-			    // Display an alert
-			    set_alert(true, "bad", "One of the submitted risk values is not a numeric value.");
-		    }
+            // Otherwise, there was a problem
+            else
+            {
+                // Display an alert
+                set_alert(true, "bad", "The risk formula submitted was an invalid value.");
+            }
         }
+        
+    }
+    
+    // Check if the impact update was submitted
+    if (isset($_POST['update_impact']))
+    {
+        $new_name = $_POST['new_name'];
+        $value = (int)$_POST['impact'];
+
+        // Verify value is an integer
+        if (is_int($value))
+        {
+            update_table("impact", $new_name, $value);
+
+            // Display an alert
+            set_alert(true, "good", $escaper->escapeHtml($lang['SuccessUpdatingImpactName']));
+
+            refresh();
+        }
+    }
+
+    // Check if the likelihood update was submitted
+    if (isset($_POST['update_likelihood']))
+    {
+        $new_name = $_POST['new_name'];
+        $value = (int)$_POST['likelihood'];
+
+        // Verify value is an integer
+        if (is_int($value))
+        {
+            update_table("likelihood", $new_name, $value);
+
+            // Display an alert
+            set_alert(true, "good", $escaper->escapeHtml($lang['SuccessUpdatingLikelihoodName']));
+            
+            refresh();
+        }
+    }
+    
+    // Check if contributing risk was submitted
+    if (isset($_POST['save_contributing_risk']))
+    {
+        $subjects = empty($_POST['subject']) ? [] : $_POST['subject'];
+        $weights = empty($_POST['weight']) ? [] : $_POST['weight'];
+        $existing_subjects = empty($_POST['existing_subject']) ? [] : $_POST['existing_subject'];
+        $existing_weights = empty($_POST['existing_weight']) ? [] : $_POST['existing_weight'];
+        
+        // Save contributing risks
+        if (save_contributing_risks($subjects, $weights, $existing_subjects, $existing_weights))
+        {
+            // Display an alert
+            set_alert(true, "good", $escaper->escapeHtml($lang['SuccessSaveContributingRisks']));
+            
+            refresh();
+        }
+    }
+
+    function displayEditableLineFor($localizationKey, $risk_levels, $level) {
+
+        global $escaper;
+
+        $risk_name = "<span data-level='{$level}'><span class='editable'>{$escaper->escapeHtml($risk_levels[$level]['display_name'])}</span>
+                        <input type='text' data-field='display_name' class='editable' value='{$escaper->escapeHtml($risk_levels[$level]['display_name'])}' style='display: none;'></span>";
+
+        $risk_value = "<span data-level='{$level}'><span class='editable'>{$escaper->escapeHtml($risk_levels[$level]['value'])}</span>
+                        <input type='text' data-field='value' class='editable' value='{$escaper->escapeHtml($risk_levels[$level]['value'])}' style='display: none;'></span>";
+
+        $color_select = "<span data-level='{$level}'><input data-field='color' class='level-colorpicker level-color editable' type='hidden' value='{$escaper->escapeHtml($risk_levels[$level]['color'])}'>
+                        <div class='colorSelector'><div style='background-color:{$escaper->escapeHtml($risk_levels[$level]['color'])}'></div></div></span>";
+
+        echo "<div>";
+            echo _lang($localizationKey, array('risk_name' => $risk_name, 'risk_value' => $risk_value, 'color_select' => $color_select), false);
+        echo "</div>";
+    }
 ?>
 
 <!doctype html>
 <html>
 
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/common.js"></script>
     <script type="text/javascript" src="../js/colorpicker.js"></script>
 
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>
@@ -127,8 +174,8 @@
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/bootstrap-responsive.css">
     <link rel="stylesheet" media="screen" type="text/css" href="../css/colorpicker.css" />
-
-    <style type="text../css">.text-rotation {display: block; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);}</style>
+    <link rel="stylesheet" href="../css/settings_tabs.css">
+    
 
     <link rel="stylesheet" href="../css/divshot-util.css">
     <link rel="stylesheet" href="../css/divshot-canvas.css">
@@ -136,81 +183,85 @@
 
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+
+    <style type="text/css">
+        .text-rotation {
+            display: block;
+            -webkit-transform: rotate(90deg);
+            -moz-transform: rotate(90deg);
+        }
+        
+        span.editable {
+            line-height: 2.5;
+        }
+        
+        td {
+            padding: 2px 10px;
+        }
+    </style>
+
+    <?php
+        setup_alert_requirements("..");
+    ?>    
   </head>
 
   <body>
 
 <?php
-	view_top_menu("Configure");
+    view_top_menu("Configure");
 
-	// Get any alert messages
-	get_alert();
+    // Get any alert messages
+    get_alert();
 ?>
+       
     <div class="container-fluid">
       <div class="row-fluid">
         <div class="span3">
           <?php view_configure_menu("ConfigureRiskFormula"); ?>
         </div>
         <div class="span9">
-          <div class="row-fluid">
-            <div class="span12">
-              <div class="hero-unit risk-levels-container">
-                <h4><?php echo $escaper->escapeHtml($lang['MyClassicRiskFormulaIs']); ?>:</h4>
+            <div class="row-fluid">
+                <div class="span12">
+                    <div class="risk-levels-container">
+                        <div class="wrap">
+                            <ul class="tabs group">
+                              <li><a class="active" href="#/risk-levels"><?php echo $escaper->escapeHtml($lang['RiskLevels']); ?></a></li>
+                              <li style="width: 200px;"><a href="#/classic-risk-formula"><?php echo $escaper->escapeHtml($lang['ClassicRiskFormula']); ?></a></li>
+                              <li style="width: 200px;"><a href="#/contributing-risk-formula"><?php echo $escaper->escapeHtml($lang['ContributingRiskFormula']); ?></a></li>
+                            </ul>
+                                      
+                        </div>
+                        <div id="content">
+                            <div id="risk-levels">
+                                <?php $risk_levels = get_risk_levels(); ?>
 
-                <form name="risk_levels" method="post" action="">
-                    <p><?php echo $escaper->escapeHtml($lang['RISK']); ?> = <?php create_dropdown("risk_models", get_setting("risk_model")) ?></p>
-
-                    <?php $risk_levels = get_risk_levels(); ?>
-
-                    <div>
-                        <?php echo $escaper->escapeHtml($lang['IConsiderVeryHighRiskToBeAnythingGreaterThan']); ?>: 
-                        <input type="text" name="level[Very High][value]" size="2" value="<?php echo $escaper->escapeHtml($risk_levels[3]['value']); ?>" /> 
-                        <input class="level-colorpicker level-color" type="hidden" name="level[Very High][color]" value="<?php echo $escaper->escapeHtml($risk_levels[3]['color']); ?>"> 
-                        <div class="colorSelector">
-                            <div style="background-color: <?php echo $escaper->escapeHtml($risk_levels[3]['color']); ?>;"></div>
+                                <?php displayEditableLineFor('RiskLevelTextTop', $risk_levels, 3); ?>
+                                <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 2); ?>
+                                <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 1); ?>
+                                <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 0); ?>
+                            </div>
+                            <div id="classic-risk-formula" style="display: none;">
+                                <?php create_risk_formula_table(); ?>
+                            </div>
+                            <div id="contributing-risk-formula" style="display: none;">
+                                <?php display_contributing_risk_formula(); ?>
+                            </div>
                         </div>
                     </div>
-                
-                
-                    <div>
-                        <?php echo $escaper->escapeHtml($lang['IConsiderHighRiskToBeLessThanAboveButGreaterThan']); ?>: 
-                        <input type="text" name="level[High][value]" size="2" value="<?php echo $escaper->escapeHtml($risk_levels[2]['value']); ?>" />
-                        <input class="level-colorpicker level-color" type="hidden" name="level[High][color]" value="<?php echo $escaper->escapeHtml($risk_levels[2]['color']); ?>"> 
-                        <div class="colorSelector">
-                            <div style="background-color: <?php echo $escaper->escapeHtml($risk_levels[2]['color']); ?>;"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <?php echo $escaper->escapeHtml($lang['IConsiderMediumRiskToBeLessThanAboveButGreaterThan']); ?>: 
-                        <input type="text" name="level[Medium][value]" size="2" value="<?php echo $escaper->escapeHtml($risk_levels[1]['value']); ?>" />
-                        <input class="level-colorpicker level-color" type="hidden" name="level[Medium][color]" value="<?php echo $escaper->escapeHtml($risk_levels[1]['color']); ?>"> 
-                        <div class="colorSelector">
-                            <div style="background-color: <?php echo $escaper->escapeHtml($risk_levels[1]['color']); ?>;"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <?php echo $escaper->escapeHtml($lang['IConsiderlowRiskToBeLessThanAboveButGreaterThan']); ?>: 
-                        <input type="text" name="level[Low][value]" size="2" value="<?php echo $escaper->escapeHtml($risk_levels[0]['value']); ?>" />
-                        <input class="level-colorpicker level-color" type="hidden" name="level[Low][color]" value="<?php echo $escaper->escapeHtml($risk_levels[0]['color']); ?>"> 
-                        <div class="colorSelector">
-                            <div style="background-color: <?php echo $escaper->escapeHtml($risk_levels[0]['color']); ?>;"></div>
-                        </div>
-                    </div>
-
-                    <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_risk_levels" />
-
-                </form>
-
-                <?php create_risk_table(); ?>
-
-                <?php echo "<p><font size=\"1\">* " . $escaper->escapeHtml($lang['AllRiskScoresAreAdjusted']) . "</font></p>"; ?>
-              </div>
+                </div>
             </div>
-          </div>
+              
+            <div class="row-fluid">
+                <div class="span12">
+                  <div class="">
+                    <?php echo "<p><font size=\"1\">* " . $escaper->escapeHtml($lang['AllRiskScoresAreAdjusted']) . "</font></p>"; ?>
+                  </div>
+                </div>
+            </div>
         </div>
       </div>
     </div>
-    <script type="">
+    <script>
         function colourNameToHex(colour)
         {
             var colours = {"aliceblue":"#f0f8ff","antiquewhite":"#faebd7","aqua":"#00ffff","aquamarine":"#7fffd4","azure":"#f0ffff",
@@ -242,33 +293,119 @@
                 return colours[colour.toLowerCase()];
 
             return colour;
-        }    
-    
-    
-        $('.colorSelector').each(function(){
-            var color = $(this).parent().find('.level-colorpicker').val()
-            color = colourNameToHex(color)
-            $(this).ColorPicker({
-                color: color,
-                onShow: function (colpkr) {
-                    $(colpkr).fadeIn(500);
-                    return false;
-                },
-                onHide: function (colpkr) {
-                    $(colpkr).fadeOut(500);
-                    return false;
-                },
-                onSubmit: function (hsb, hex, rgb, el) {
-                    console.log(el)
-                },
-                onChange: function (hsb, hex, rgb, el) {
-                    $('div', el).css('backgroundColor', '#' + hex);
-                    $(el).parent().find('.level-color').val('#' + hex);
-                }
-            });    
-        })
+        }
+
+        function resizable (el, factor) {
+            var int = Number(factor) || 7.6;
+            function resize() {el.width((el.val().length + 1) * int);}
+            var e = ['keyup', 'keypress', 'focus', 'blur', 'change'];
+            for (var i in e)
+                el.on(e[i], resize);
+            resize();
+        }
+
+        $(document).ready(function(){
+            $('input.editable').each(function(){
+                resizable($(this));
+            });
+
+            $("span.editable").click(function() {
+                $(this).hide();
+                $(this).parent().find('input').show().select();
+            });
+
+            $('input.editable').blur(function(){
+                var label = $(this).parent().find('span.editable');
+                $(this).hide();
+                label.text($(this).val());
+                label.show();
+            });
+
+            $('#risk-levels input.editable').change(function(){
+                //saving it so it can be referenced from the AJAX callbacks
+                var _this = $(this);
+                var level = _this.parent().data('level');
+                var field = _this.data('field');
+                var value = _this.val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/api/risklevel/update",
+                    data: {
+                        level: level,
+                        field: field,
+                        value: value
+                    },
+                    success: function(data){
+                        if(data.status_message){
+                            showAlertsFromArray(data.status_message);
+                        }
+                    },
+                    error: function(xhr,status,error){
+                        if(!retryCSRF(xhr, this))
+                        {
+                            if(xhr.responseJSON && xhr.responseJSON.status_message){
+                                showAlertsFromArray(xhr.responseJSON.status_message);
+                            }
+                        }
+                    },
+                    complete: function(xhr,status){
+                        if(xhr.responseJSON && xhr.responseJSON.data){
+                            // If there's data returned set it back to the label
+                            _this.parent().find('span.editable').text(xhr.responseJSON.data);
+                            // and to the input
+                            _this.val(xhr.responseJSON.data);
+                        }
+                    }
+                });
+            });
+
+            $('.colorSelector').each(function(){
+                var inp = $(this).parent().find('.level-colorpicker');
+                var color = colourNameToHex(inp.val());
+
+                $(this).ColorPicker({
+                    color: color,
+                    onShow: function (colpkr) {
+                        $(colpkr).fadeIn(500);
+                        inp.data('original', inp.val());
+                        return false;
+                    },
+                    onHide: function (colpkr) {
+                        $(colpkr).fadeOut(500);
+                        if (inp.data('original') != inp.val())
+                            inp.trigger('change');
+                        return false;
+                    },
+                    onChange: function (hsb, hex, rgb, el) {
+                        $('div', el).css('backgroundColor', '#' + hex);
+                        $(el).parent().find('.level-color').val('#' + hex);
+                    }
+                });
+            });
+
+            var tabs =  $(".tabs li a");
+            var hash = window.location.hash;
+            if(hash){
+                //console.log(hash);
+                tabs.removeClass("active");
+                $(".tabs").find("[href='"+hash+"']").addClass("active");
+
+                var content = hash.replace('/','');
+                $("#content > div").hide();
+                $(content).fadeIn(200);
+            }
+
+            tabs.click(function() {
+                var content = this.hash.replace('/','');
+                tabs.removeClass("active");
+                $(this).addClass("active");
+                $("#content > div").hide();
+                $(content).fadeIn(200);
+            });
+        });
     </script>
-    
+
   </body>
 
 </html>

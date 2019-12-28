@@ -14,27 +14,19 @@
     $escaper = new Zend\Escaper\Escaper('utf-8');
 
     // Add various security headers
-    header("X-Frame-Options: DENY");
-    header("X-XSS-Protection: 1; mode=block");
-
-    // If we want to enable the Content Security Policy (CSP) - This may break Chrome
-    if (csp_enabled())
-    {
-            // Add the Content-Security-Policy header
-    header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-    }
-
-    // Session handler is database
-    if (USE_DATABASE_FOR_SESSIONS == "true")
-    {
-    session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-    }
-
-    // Start the session
-    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+    add_security_headers();
 
     if (!isset($_SESSION))
     {
+        // Session handler is database
+        if (USE_DATABASE_FOR_SESSIONS == "true")
+        {
+            session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+        }
+
+        // Start the session
+        session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
         session_name('SimpleRisk');
         session_start();
     }
@@ -97,9 +89,15 @@ function display()
         // But the extra is not activated
         if (!complianceforge_extra())
         {
-            echo "<form name=\"activate\" method=\"post\" action=\"\">\n";
-            echo "<input type=\"submit\" value=\"" . $escaper->escapeHtml($lang['Activate']) . "\" name=\"activate\" /><br />\n";
-            echo "</form>\n";
+            // If the extra is not restricted based on the install type
+            if (!restricted_extra("complianceforgescf"))
+            {
+                echo "<form name=\"activate\" method=\"post\" action=\"\">\n";
+                echo "<input type=\"submit\" value=\"" . $escaper->escapeHtml($lang['Activate']) . "\" name=\"activate\" /><br />\n";
+                echo "</form>\n";
+            }
+            // The extra is restricted
+            else echo $escaper->escapeHtml($lang['YouNeedToUpgradeYourSimpleRiskSubscription']);
         }
         // Once it has been activated
         else
@@ -123,6 +121,7 @@ function display()
 <html>
 
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>
     <script src="../js/jquery.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
@@ -145,7 +144,9 @@ function display()
 
     <script type="text/javascript" src="../js/jquery.tree.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/jquery.tree.min.css" />
-
+    <?php
+        setup_alert_requirements("..");
+    ?>
     <script type="text/javascript">
     $(function(){
         $("#complianceforge_frameworks").multiselect({
@@ -181,6 +182,7 @@ function display()
         </div>
       </div>
     </div>
+    <?php display_set_default_date_format_script(); ?>
   </body>
 
 </html>

@@ -43,15 +43,27 @@ function simplerisk_health_check()
         // Check that SimpleRisk can connect to the services platform
         check_web_connectivity();
 
-	echo "<br /><b><u>PHP Extensions</u></b><br />";
+	echo "<br /><b><u>PHP</u></b><br />";
+
+	// Check that this is PHP 7
+	check_php_version();
 	
 	// Check the necessary PHP extensions are installed
 	check_php_extensions();
 
 	echo "<br /><b><u>MySQL</u></b><br />";
 
+	// Check the current database size and free space
+	check_mysql_size();
+
 	// Check if MySQL STRICT SQL mode is enabled
-	check_strict_sql_mode();
+	//check_strict_sql_mode();
+
+	// Check if MySQL NO_ZERO_DATE mode is enabled
+	check_no_zero_date();
+
+	// Check if MySQL ONLY_FULL_GROUP_BY mode is enabled
+	check_only_full_group_by();
 
 	echo "<br /><b><u>File and Directory Permissions</u></b><br />";
 
@@ -188,7 +200,7 @@ function check_web_connectivity()
 function check_php_extensions()
 {
 	// List of extensions to check for
-	$extensions = array("mysql", "pdo", "pdo_mysql", "mcrypt", "json", "phar", "zlib", "mbstring", "ldap");
+	$extensions = array("pdo", "pdo_mysql", "json", "phar", "zlib", "mbstring", "ldap", "dom");
 
 	// For each extension
 	foreach ($extensions as $extension)
@@ -275,6 +287,115 @@ function check_strict_sql_mode()
 	else
 	{
 		health_check_good("Verified that STRICT_TRANS_TABLES is not enabled for MySQL.");
+	}
+}
+
+/********************************
+ * FUNCTION: CHECK NO ZERO DATE *
+ ********************************/
+function check_no_zero_date()
+{
+        // Open a database connection
+        $db = db_open();
+        
+        // Query for the current SQL mode
+        $stmt = $db->prepare("SELECT @@sql_mode;");
+        $stmt->execute();
+        $array = $stmt->fetch();
+        $sql_mode = $array['@@sql_mode'];
+        
+        // Close the database connection
+        db_close($db);
+        
+        // If the row contains NO_ZERO_DATE
+        if (preg_match("/.*NO_ZERO_DATE.*/", $sql_mode))
+        {       
+                health_check_bad("SimpleRisk will not work properly with NO_ZERO_DATE enabled.");
+        }
+        else    
+        {       
+                health_check_good("Verified that NO_ZERO_DATE is not enabled for MySQL.");
+        }
+}
+
+/******************************
+ * FUNCTION: CHECK MYSQL SIZE *
+ ******************************/
+function check_mysql_size()
+{
+	// Open a database connection
+	$db = db_open();
+
+	 // Query for the size and free space
+	$stmt = $db->prepare("SELECT table_schema, sum( data_length + index_length ) / 1024 / 1024 size, sum( data_free )/ 1024 / 1024 free FROM information_schema.TABLES WHERE table_schema='".DB_DATABASE."';");
+	$stmt->execute();
+	$array = $stmt->fetch();
+	$size = $array['size'];
+	$free = $array['free'];
+
+	// Close the database connection
+	db_close($db);
+
+	// Get the percent remaining
+	//$remaining_percent = $free / $size;
+
+	health_check_good("SimpleRisk is using " . round($size, 2) . " MB of disk space.");
+}
+
+/**************************************
+ * FUNCTION: CHECK ONLY FULL GROUP BY *
+ **************************************/
+function check_only_full_group_by()
+{
+        // Open a database connection
+        $db = db_open();
+        
+        // Query for the current SQL mode
+        $stmt = $db->prepare("SELECT @@sql_mode;");
+        $stmt->execute();
+        $array = $stmt->fetch();
+        $sql_mode = $array['@@sql_mode'];
+        
+        // Close the database connection
+        db_close($db);
+        
+        // If the row contains ONLY_FULL_GROUP_BY
+        if (preg_match("/.*ONLY_FULL_GROUP_BY.*/", $sql_mode))
+        {       
+                health_check_bad("SimpleRisk will not work properly with ONLY_FULL_GROUP_BY enabled.");
+        }
+        else    
+        {       
+                health_check_good("Verified that ONLY_FULL_GROUP_BY is not enabled for MySQL.");
+        }
+}
+
+/*******************************
+ * FUNCTION: CHECK PHP VERSION *
+ *******************************/
+function check_php_version()
+{
+	// Get the version of PHP
+	if (!defined('PHP_VERSION_ID'))
+	{
+		$version = explode('.', PHP_VERSION);
+
+		define('PHP_VERSION_ID', ($version[0] * 10000 + $version[1] * 100 + $version[2]));
+	}
+
+	// If PHP is at least 7
+	if (PHP_VERSION_ID >= 70000)
+	{
+		health_check_good("SimpleRisk is running under PHP 7.");
+	}
+	// If this is PHP 5.x
+	else if (PHP_VERSION_ID >= 50000 && PHP_VERSION_ID < 60000)
+	{
+		health_check_bad("SimpleRisk will no longer run properly under PHP version 5.x.  Please upgrade to PHP 7.");
+	}
+	else
+	{
+		health_check_bad("SimpleRisk requires PHP 7 to run properly.");
 	}
 }
 

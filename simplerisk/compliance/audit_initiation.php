@@ -18,33 +18,22 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-  // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
-        session_name('SimpleRisk');
-        session_start();
-}
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+      session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
 
-// Load CSRF Magic
-require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+    session_name('SimpleRisk');
+    session_start();
+}
 
 // Include the language file
 require_once(language_file());
@@ -59,6 +48,10 @@ if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
   header("Location: ../index.php");
   exit(0);
 }
+
+// Include the CSRF-magic library
+// Make sure it's called after the session is properly setup
+include_csrf_magic();
 
 // Enforce that the user has access to compliance
 enforce_permission_compliance();
@@ -80,11 +73,19 @@ if (isset($_POST['update_framework']))
   // Otherwise
   else
   {
-    // Insert a new framework up to 100 chars
-    if(update_framework($framework_id, $name, $descripiton, $parent)){
+    // Check if user has a permission to modify framework
+    if(empty($_SESSION['modify_frameworks']))
+    {
+        set_alert(true, "bad", $escaper->escapeHtml($lang['NoModifyFrameworkPermission']));
+    }
+    // Update framework
+    elseif(update_framework($framework_id, $name, $descripiton, $parent))
+    {
         // Display an alert
         set_alert(true, "good", $escaper->escapeHtml($lang['FrameworkUpdated']));
-    }else{
+    }
+    else
+    {
         // Display an alert
         set_alert(true, "bad", $escaper->escapeHtml($lang['FrameworkNameExist']));
     }
@@ -98,8 +99,14 @@ if (isset($_POST['update_control']))
 {
   $control_id = (int)$_POST['control_id'];
 
+  // If user has no permission to modify controls
+  if(empty($_SESSION['modify_controls']))
+  {
+      // Display an alert
+      set_alert(true, "bad", $escaper->escapeHtml($lang['NoModifyControlPermission']));
+  }
   // Verify value is an integer
-  if (is_int($control_id))
+  elseif (is_int($control_id))
   {
       $control = array(
         'short_name' => isset($_POST['short_name']) ? $_POST['short_name'] : "",
@@ -133,19 +140,21 @@ if (isset($_POST['update_control']))
 
 // Check if editing test
 if(isset($_POST['update_test'])){
-    $test_id         = (int)$_POST['test_id'];
+    $test_id        = (int)$_POST['test_id'];
     $tester         = (int)$_POST['tester'];
+    $additional_stakeholders = empty($_POST['additional_stakeholders']) ? "" : implode(",", $_POST['additional_stakeholders']);
+    $teams          = isset($_POST['team']) ? $_POST['team'] : [];
     $test_frequency = (int)$_POST['test_frequency'];
-    $last_date      = $_POST['last_date'];
-    $next_date      = $_POST['next_date'];
+    $last_date      = get_standard_date_from_default_format($_POST['last_date']);
+    $next_date      = get_standard_date_from_default_format($_POST['next_date']);
     $name           = $escaper->escapeHtml($_POST['name']);
     $objective      = $escaper->escapeHtml($_POST['objective']);
     $test_steps     = $escaper->escapeHtml($_POST['test_steps']);
-    $approximate_time = (int)$_POST['approximate_time'];
+    $approximate_time = is_int($_POST['approximate_time']) ? $_POST['approximate_time'] : 0;
     $expected_results = $escaper->escapeHtml($_POST['expected_results']);
     
     // Update a framework control test
-    update_framework_control_test($test_id, $tester, $test_frequency, $name, $objective, $test_steps, $approximate_time, $expected_results, $last_date, $next_date);
+    update_framework_control_test($test_id, $tester, $test_frequency, $name, $objective, $test_steps, $approximate_time, $expected_results, $last_date, $next_date, false, $additional_stakeholders, $teams);
     
     set_alert(true, "good", $escaper->escapeHtml($lang['TestSuccessUpdated']));
     
@@ -178,6 +187,7 @@ if(isset($_GET['initiate']) ){
 <html>
 
 <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/jquery.easyui.min.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
@@ -195,6 +205,14 @@ if(isset($_GET['initiate']) ){
     
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+    <?php
+        setup_alert_requirements("..");
+    ?>
+    <style>
+        #framework--update .modal-header, #control--update .modal-header, #test--edit .modal-header {
+            color: #ffffff;
+        }
+    </style>
 </head>
 
 <body>
@@ -210,8 +228,7 @@ if(isset($_GET['initiate']) ){
             <div class="span3">
                 <?php view_compliance_menu("InitialAudits"); ?>
             </div>
-            <div class="span9 compliance-content-container content-margin-height">
-                <div id="show-alert"></div>
+            <div class="span9 compliance-content-container content-margin-height">                
                 <div class="row-fluid">
                     <div class="span12">
                         <div class="custom-treegrid-container" id="initiate-audits">
@@ -307,6 +324,12 @@ if(isset($_GET['initiate']) ){
                         
                         $('[name=test_id]', modal).val(data['id']);
                         $('[name=tester]', modal).val(data['tester']);
+                        $('#additional_stakeholders', modal).multiselect('deselectAll', false);
+                        $('#additional_stakeholders', modal).multiselect('select', data['additional_stakeholders']);
+
+                        $("[name='team[]']", modal).multiselect('deselectAll', false);
+                        $("[name='team[]']", modal).multiselect('select', data['teams']);
+
                         $('[name=test_frequency]', modal).val(data['test_frequency']);
                         $('[name=last_date]', modal).val(data['last_date']);
                         $('[name=next_date]', modal).val(data['next_date']);
@@ -315,61 +338,86 @@ if(isset($_GET['initiate']) ){
                         $('[name=test_steps]', modal).val(data['test_steps']);
                         $('[name=approximate_time]', modal).val(data['approximate_time']);
                         $('[name=expected_results]', modal).val(data['expected_results']);
-                        $(".datepicker" , modal).datepicker({dateFormat: "yy-mm-dd"});
+                        $(".datepicker" , modal).datepicker();
                         
                         modal.modal();
                     }
                 })
             })
             
-            // Event when clicks Initiate Framework Audit button
-            $('body').on("click", ".initiate-framework-audit-btn", function(){
-                document.location.href = BASE_URL + "/compliance/audit_initiation.php?initiate&type=framework&id=" + $(this).data('id');
-            })
+            // Event when clicks Initiate Framework, Control, Test Audit button
+            $('body').on("click", ".initiate-framework-audit-btn, .initiate-control-audit-btn, .initiate-test-btn", function(){
+                if($(this).hasClass("initiate-framework-audit-btn")){
+                    var type = "framework";
+                }else if($(this).hasClass("initiate-control-audit-btn")){
+                    var type = "control";
+                }else if($(this).hasClass("initiate-test-btn")){
+                    var type = "test";
+                }
             
-            // Event when clicks Initiate Control Audit button
-            $('body').on("click", ".initiate-control-audit-btn", function(){
-                document.location.href = BASE_URL + "/compliance/audit_initiation.php?initiate&type=control&id=" + $(this).data('id');
-            })
-            
-            // Event when clicks Initiate Test button
-            $('body').on("click", ".initiate-test-btn", function(){
-                document.location.href = BASE_URL + "/compliance/audit_initiation.php?initiate&type=test&id=" + $(this).data('id');
+                $.ajax({
+                    url: BASE_URL + '/api/compliance/audit_initiation/initiate',
+                    type: 'POST',
+                    data: {
+                        type: type,// control, test
+                        id: $(this).data('id'),
+                    },
+                    success : function (res){
+                        if(res.status_message){
+                            showAlertsFromArray(res.status_message);
+                        }
+                    },
+                    error: function(xhr,status,error){
+                        if(!retryCSRF(xhr, this))
+                        {
+                            if(xhr.responseJSON && xhr.responseJSON.status_message){
+                                showAlertsFromArray(xhr.responseJSON.status_message);
+                            }
+                        }
+                    }
+                });
             })
 
         })
     </script>
 
     <!-- MODEL WINDOW FOR EDITING FRAMEWORK -->
-    <div id="framework--update" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-body">
+    <div id="framework--update" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
         <form class="" action="#" method="post" autocomplete="off">
-            <input type="hidden" class="framework_id" name="framework_id" value=""> 
-            <div class="form-group">
-                <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkName']); ?></label>
-                <input type="text" required name="framework_name" value="" class="form-control" autocomplete="off">
-
-                <label for=""><?php echo $escaper->escapeHtml($lang['ParentFramework']); ?></label>
-                <div class="parent_frameworks_container">
-                </div>
-
-                <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkDescription']); ?></label>
-                <textarea name="framework_description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['FrameworkEditHeader']); ?></h4>
             </div>
+            <div class="modal-body">
+                <input type="hidden" class="framework_id" name="framework_id" value=""> 
+                <div class="form-group">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkName']); ?></label>
+                    <input type="text" required name="framework_name" value="" class="form-control" autocomplete="off">
 
-            <div class="form-group text-right">
+                    <label for=""><?php echo $escaper->escapeHtml($lang['ParentFramework']); ?></label>
+                    <div class="parent_frameworks_container">
+                    </div>
+
+                    <label for=""><?php echo $escaper->escapeHtml($lang['FrameworkDescription']); ?></label>
+                    <textarea name="framework_description" value="" class="form-control" rows="6" style="width:100%;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
                 <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
                 <button type="submit" name="update_framework" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
             </div>
         </form>
-      </div>
     </div>
 
     <!-- MODEL WINDOW FOR UPDATING CONTROL -->
-    <div id="control--update" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="control--update" aria-hidden="true">
-      <div class="modal-body">
-        <form class="" id="control--new" action="#controls-tab" method="post" autocomplete="off">
-            <input type="hidden" class="control_id" name="control_id" value=""> 
+    <div id="control--update" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="control--update" aria-hidden="true">
+      <form class="" id="control--new" action="#controls-tab" method="post" autocomplete="off">
+        <input type="hidden" class="control_id" name="control_id" value=""> 
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['ControlEditHeader']); ?></h4>
+        </div>
+        <div class="modal-body">
           <div class="form-group">
             <label for=""><?php echo $escaper->escapeHtml($lang['ControlShortName']); ?></label>
             <input type="text" name="short_name" value="" class="form-control">
@@ -384,7 +432,7 @@ if(isset($_GET['initiate']) ){
             <textarea name="supplemental_guidance" value="" class="form-control" rows="6" style="width:100%;"></textarea>
 
             <label for=""><?php echo $escaper->escapeHtml($lang['ControlOwner']); ?></label>
-            <?php create_dropdown("user", NULL, "control_owner", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
+            <?php create_dropdown("enabled_users", NULL, "control_owner", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
 
             <label for=""><?php echo $escaper->escapeHtml($lang['ControlFrameworks']); ?></label>
             <?php create_multiple_dropdown("frameworks", NULL); ?>
@@ -404,27 +452,35 @@ if(isset($_GET['initiate']) ){
             <label for=""><?php echo $escaper->escapeHtml($lang['ControlFamily']); ?></label>
             <?php create_dropdown("family", NULL, "family", true, false, false, "", $escaper->escapeHtml($lang['Unassigned'])); ?>
           </div>
-          
-          <div class="form-group text-right">
+        </div>
+        <div class="modal-footer">
             <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
             <button type="submit" name="update_control" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
-          </div>
-        </form>
-
-      </div>
+        </div>
+      </form>
     </div>
     
     <!-- MODEL WINDOW FOR EDITING TEST -->
-    <div id="test--edit" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-body">
-        <form class="" id="test-edit-form" method="post" autocomplete="off">
+    <div id="test--edit" class="modal hide" tabindex="-1" role="dialog" aria-hidden="true">
+      <form class="" id="test-edit-form" method="post" autocomplete="off">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title"><?php echo $escaper->escapeHtml($lang['TestEditHeader']); ?></h4>
+        </div>
+        <div class="modal-body">
           <div class="form-group">
             <label for=""><?php echo $escaper->escapeHtml($lang['TestName']); ?></label>
             <input type="text" name="name" value="" class="form-control">
 
             <label for=""><?php echo $escaper->escapeHtml($lang['Tester']); ?></label>
-            <?php create_dropdown("user", NULL, "tester", false, false, false); ?>
-            
+            <?php create_dropdown("enabled_users", NULL, "tester", false, false, false); ?>
+
+            <label for=""><?php echo $escaper->escapeHtml($lang['AdditionalStakeholders']); ?></label>
+            <?php create_multiple_dropdown("enabled_users", NULL, "additional_stakeholders"); ?>
+
+            <label for=""><?php echo $escaper->escapeHtml($lang['Teams']); ?></label>
+            <?php create_multiple_dropdown("team"); ?>
+
             <label for=""><?php echo $escaper->escapeHtml($lang['TestFrequency']); ?></label>
             <input type="number" name="test_frequency" value="" class="form-control"> <span class="white-labels">(<?php echo $escaper->escapeHtml($lang['days']); ?>)</span>
             
@@ -449,15 +505,23 @@ if(isset($_GET['initiate']) ){
             <input type="hidden" name="test_id" value="">
 
           </div>
-          
-          <div class="form-group text-right">
-            <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
-            <button type="submit" name="update_test" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
-          </div>
-        </form>
-
-      </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" aria-hidden="true"><?php echo $escaper->escapeHtml($lang['Cancel']); ?></button>
+          <button type="submit" name="update_test" class="btn btn-danger"><?php echo $escaper->escapeHtml($lang['Update']); ?></button>
+        </div>
+      </form>
     </div>
+    <script>
+        $( document ).ready(function() {
+            $("#additional_stakeholders").multiselect();
 
+            //Have to remove the 'fade' class for the shown event to work for modals
+            $('#framework--update, #control--update, #test--edit').on('shown.bs.modal', function() {
+                $(this).find('.modal-body').scrollTop(0);
+            });
+        });
+    </script>
+    <?php display_set_default_date_format_script(); ?>
 </body>
 </html>

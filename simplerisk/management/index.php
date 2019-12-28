@@ -16,36 +16,22 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-  // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
-        session_name('SimpleRisk');
-        session_start();
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+      session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+    session_name('SimpleRisk');
+    session_start();
 }
-
-// Load CSRF Magic
-require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
-
-// Include the language file
-require_once(language_file());
 
 // Check for session timeout or renegotiation
 session_check();
@@ -58,107 +44,136 @@ if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
   exit(0);
 }
 
+// Include the CSRF-magic library
+// Make sure it's called after the session is properly setup
+include_csrf_magic();
+
+// Include the language file
+require_once(language_file());
+
 // Enforce that the user has access to risk management
 enforce_permission_riskmanagement();
 
 // Check if the user has access to submit risks
-if (!isset($_SESSION["submit_risks"]) || $_SESSION["submit_risks"] != 1)
-{
-  $submit_risks = false;
+if (!isset($_SESSION["submit_risks"]) || $_SESSION["submit_risks"] != 1) {
+    $submit_risks = false;
 
-  // Display an alert
-  set_alert(true, "bad", "You do not have permission to submit new risks.  Any risks that you attempt to submit will not be recorded.  Please contact an Administrator if you feel that you have reached this message in error.");
+    // Display an alert
+    set_alert(true, "bad", "You do not have permission to submit new risks.  Any risks that you attempt to submit will not be recorded.  Please contact an Administrator if you feel that you have reached this message in error.");
 }
 else $submit_risks = true;
 
 // Check if the subject is null
-if (isset($_POST['subject']) && $_POST['subject'] == "")
+if (get_param("POST", 'subject', false) !== false && !trim(get_param("POST", 'subject', "")))
 {
   $submit_risks = false;
-
   // Display an alert
+  ob_end_clean();
   set_alert(true, "bad", "The subject of a risk cannot be empty.");
+  json_response(400, get_alert(true), NULL);
+  exit;
 }
-
+    
 // Check if a new risk was submitted and the user has permissions to submit new risks
-if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && $submit_risks)
-{
-  $status = "New";
-  $subject = $_POST['subject'];
-  $reference_id = $_POST['reference_id'];
-  $regulation = (int)$_POST['regulation'];
-  $control_number = $_POST['control_number'];
-  $location = (int)$_POST['location'];
-  $source = (int)$_POST['source'];
-  $category = (int)$_POST['category'];
-  $team = (int)$_POST['team'];
-  $technology = (int)$_POST['technology'];
-  $owner = (int)$_POST['owner'];
-  $manager = (int)$_POST['manager'];
-  $assessment = $_POST['assessment'];
-  $notes = $_POST['notes'];
-  $assets = $_POST['assets'];
-  $additional_stakeholders = empty($_POST['additional_stakeholders']) ? "" : implode(",", $_POST['additional_stakeholders']);
+if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' && $submit_risks) {
 
-  // Risk scoring method
-  // 1 = Classic
-  // 2 = CVSS
-  // 3 = DREAD
-  // 4 = OWASP
-  // 5 = Custom
-  $scoring_method = (int)$_POST['scoring_method'];
+    $status = "New";
+    $subject = get_param("POST", 'subject');
+    $reference_id = get_param("POST", 'reference_id');
+    $regulation = (int)get_param("POST", 'regulation');
+    $control_number = get_param("POST", 'control_number');
+    $location = implode(",", get_param("POST", "location", []));
+    $source = (int)get_param("POST", 'source');
+    $category = (int)get_param("POST", 'category');
+    $team = get_param("POST", 'team', "") ? implode(",", get_param("POST", 'team', "")) : "";
+    $technology = get_param("POST", 'technology') ? implode(",", get_param("POST", 'technology')) : "";
+    $owner = (int)get_param("POST", "owner");
+    $manager = (int)get_param("POST", "manager");
+    $assessment = get_param("POST", "assessment");
+    $notes = get_param("POST", "notes");
+    $assets_asset_groups = get_param("POST", "assets_asset_groups", []);
+    $additional_stakeholders =  get_param("POST", "additional_stakeholders", "") ? implode(",", get_param("POST", "additional_stakeholders", "")) : "";
+    $risk_tags = get_param("POST", "tags", "");
+    if (jira_extra()) {
+        require_once(realpath(__DIR__ . '/../extras/jira/index.php'));
+        $issue_key = strtoupper(trim($_POST['jira_issue_key']));
+        if ($issue_key && !jira_validate_issue_key($issue_key)) {
+            json_response(400, get_alert(true), NULL);
+            exit;
+        }
+    }
 
-  // Classic Risk Scoring Inputs
-  $CLASSIClikelihood = (int)$_POST['likelihood'];
-  $CLASSICimpact =(int) $_POST['impact'];
+    // Risk scoring method
+    // 1 = Classic
+    // 2 = CVSS
+    // 3 = DREAD
+    // 4 = OWASP
+    // 5 = Custom
+    $scoring_method = (int)get_param("POST", "scoring_method");
 
-  // CVSS Risk Scoring Inputs
-  $CVSSAccessVector = $_POST['AccessVector'];
-  $CVSSAccessComplexity = $_POST['AccessComplexity'];
-  $CVSSAuthentication = $_POST['Authentication'];
-  $CVSSConfImpact = $_POST['ConfImpact'];
-  $CVSSIntegImpact = $_POST['IntegImpact'];
-  $CVSSAvailImpact = $_POST['AvailImpact'];
-  $CVSSExploitability = $_POST['Exploitability'];
-  $CVSSRemediationLevel = $_POST['RemediationLevel'];
-  $CVSSReportConfidence = $_POST['ReportConfidence'];
-  $CVSSCollateralDamagePotential = $_POST['CollateralDamagePotential'];
-  $CVSSTargetDistribution = $_POST['TargetDistribution'];
-  $CVSSConfidentialityRequirement = $_POST['ConfidentialityRequirement'];
-  $CVSSIntegrityRequirement = $_POST['IntegrityRequirement'];
-  $CVSSAvailabilityRequirement = $_POST['AvailabilityRequirement'];
+    // Classic Risk Scoring Inputs
+    $CLASSIClikelihood = (int)get_param("POST", "likelihood");
+    $CLASSICimpact =(int) get_param("POST", "impact");
 
-  // DREAD Risk Scoring Inputs
-  $DREADDamage = (int)$_POST['DREADDamage'];
-  $DREADReproducibility = (int)$_POST['DREADReproducibility'];
-  $DREADExploitability = (int)$_POST['DREADExploitability'];
-  $DREADAffectedUsers = (int)$_POST['DREADAffectedUsers'];
-  $DREADDiscoverability = (int)$_POST['DREADDiscoverability'];
+    // CVSS Risk Scoring Inputs
+    $CVSSAccessVector = get_param("POST", "AccessVector");
+    $CVSSAccessComplexity = get_param("POST", "AccessComplexity");
+    $CVSSAuthentication = get_param("POST", "Authentication");
+    $CVSSConfImpact = get_param("POST", "ConfImpact");
+    $CVSSIntegImpact = get_param("POST", "IntegImpact");
+    $CVSSAvailImpact = get_param("POST", "AvailImpact");
+    $CVSSExploitability = get_param("POST", "Exploitability");
+    $CVSSRemediationLevel = get_param("POST", "RemediationLevel");
+    $CVSSReportConfidence = get_param("POST", "ReportConfidence");
+    $CVSSCollateralDamagePotential = get_param("POST", "CollateralDamagePotential");
+    $CVSSTargetDistribution = get_param("POST", "TargetDistribution");
+    $CVSSConfidentialityRequirement = get_param("POST", "ConfidentialityRequirement");
+    $CVSSIntegrityRequirement = get_param("POST", "IntegrityRequirement");
+    $CVSSAvailabilityRequirement = get_param("POST", "AvailabilityRequirement");
 
-  // OWASP Risk Scoring Inputs
-  $OWASPSkillLevel = (int)$_POST['OWASPSkillLevel'];
-  $OWASPMotive = (int)$_POST['OWASPMotive'];
-  $OWASPOpportunity = (int)$_POST['OWASPOpportunity'];
-  $OWASPSize = (int)$_POST['OWASPSize'];
-  $OWASPEaseOfDiscovery = (int)$_POST['OWASPEaseOfDiscovery'];
-  $OWASPEaseOfExploit = (int)$_POST['OWASPEaseOfExploit'];
-  $OWASPAwareness = (int)$_POST['OWASPAwareness'];
-  $OWASPIntrusionDetection = (int)$_POST['OWASPIntrusionDetection'];
-  $OWASPLossOfConfidentiality = (int)$_POST['OWASPLossOfConfidentiality'];
-  $OWASPLossOfIntegrity = (int)$_POST['OWASPLossOfIntegrity'];
-  $OWASPLossOfAvailability = (int)$_POST['OWASPLossOfAvailability'];
-  $OWASPLossOfAccountability = (int)$_POST['OWASPLossOfAccountability'];
-  $OWASPFinancialDamage = (int)$_POST['OWASPFinancialDamage'];
-  $OWASPReputationDamage = (int)$_POST['OWASPReputationDamage'];
-  $OWASPNonCompliance = (int)$_POST['OWASPNonCompliance'];
-  $OWASPPrivacyViolation = (int)$_POST['OWASPPrivacyViolation'];
+    // DREAD Risk Scoring Inputs
+    $DREADDamage = (int)get_param("POST", "DREADDamage");
+    $DREADReproducibility = (int)get_param("POST", "DREADReproducibility");
+    $DREADExploitability = (int)get_param("POST", "DREADExploitability");
+    $DREADAffectedUsers = (int)get_param("POST", "DREADAffectedUsers");
+    $DREADDiscoverability = (int)get_param("POST", "DREADDiscoverability");
 
-  // Custom Risk Scoring
-  $custom = (float)$_POST['Custom'];
+    // OWASP Risk Scoring Inputs
+    $OWASPSkillLevel = (int)get_param("POST", "OWASPSkillLevel");
+    $OWASPMotive = (int)get_param("POST", "OWASPMotive");
+    $OWASPOpportunity = (int)get_param("POST", "OWASPOpportunity");
+    $OWASPSize = (int)get_param("POST", "OWASPSize");
+    $OWASPEaseOfDiscovery = (int)get_param("POST", "OWASPEaseOfDiscovery");
+    $OWASPEaseOfExploit = (int)get_param("POST", "OWASPEaseOfExploit");
+    $OWASPAwareness = (int)get_param("POST", "OWASPAwareness");
+    $OWASPIntrusionDetection = (int)get_param("POST", "OWASPIntrusionDetection");
+    $OWASPLossOfConfidentiality = (int)get_param("POST", "OWASPLossOfConfidentiality");
+    $OWASPLossOfIntegrity = (int)get_param("POST", "OWASPLossOfIntegrity");
+    $OWASPLossOfAvailability = (int)get_param("POST", "OWASPLossOfAvailability");
+    $OWASPLossOfAccountability = (int)get_param("POST", "OWASPLossOfAccountability");
+    $OWASPFinancialDamage = (int)get_param("POST", "OWASPFinancialDamage");
+    $OWASPReputationDamage = (int)get_param("POST", "OWASPReputationDamage");
+    $OWASPNonCompliance = (int)get_param("POST", "OWASPNonCompliance");
+    $OWASPPrivacyViolation = (int)get_param("POST", "OWASPPrivacyViolation");
 
-  // Submit risk and get back the id
-  $last_insert_id = submit_risk($status, $subject, $reference_id, $regulation, $control_number, $location, $source, $category, $team, $technology, $owner, $manager, $assessment, $notes, 0, 0, false, $additional_stakeholders);
-  
+    // Custom Risk Scoring
+    $custom = (float)get_param("POST", "Custom");
+
+    // Contributing Risk Scoring
+    $ContributingLikelihood = (int)get_param("POST", "ContributingLikelihood");
+    $ContributingImpacts = get_param("POST", "ContributingImpacts");
+
+    // Submit risk and get back the id
+    if($last_insert_id = submit_risk($status, $subject, $reference_id, $regulation, $control_number, $location, $source, $category, $team, $technology, $owner, $manager, $assessment, $notes, 0, 0, false, $additional_stakeholders)){}
+    else
+    {
+        // Display an alert
+        ob_end_clean();
+        set_alert(true, "bad", $lang['ThereAreUnexpectedProblems']);
+        json_response(400, get_alert(true), NULL);
+        exit;
+    }
+
     // If the encryption extra is enabled, updates order_by_subject
     if (encryption_extra())
     {
@@ -168,48 +183,99 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
         create_subject_order($_SESSION['encrypted_pass']);
     }
 
-  // Submit risk scoring
-  submit_risk_scoring($last_insert_id, $scoring_method, $CLASSIClikelihood, $CLASSICimpact, $CVSSAccessVector, $CVSSAccessComplexity, $CVSSAuthentication, $CVSSConfImpact, $CVSSIntegImpact, $CVSSAvailImpact, $CVSSExploitability, $CVSSRemediationLevel, $CVSSReportConfidence, $CVSSCollateralDamagePotential, $CVSSTargetDistribution, $CVSSConfidentialityRequirement, $CVSSIntegrityRequirement, $CVSSAvailabilityRequirement, $DREADDamage, $DREADReproducibility, $DREADExploitability, $DREADAffectedUsers, $DREADDiscoverability, $OWASPSkillLevel, $OWASPMotive, $OWASPOpportunity, $OWASPSize, $OWASPEaseOfDiscovery, $OWASPEaseOfExploit, $OWASPAwareness, $OWASPIntrusionDetection, $OWASPLossOfConfidentiality, $OWASPLossOfIntegrity, $OWASPLossOfAvailability, $OWASPLossOfAccountability, $OWASPFinancialDamage, $OWASPReputationDamage, $OWASPNonCompliance, $OWASPPrivacyViolation, $custom);
+    // Submit risk scoring
+    submit_risk_scoring($last_insert_id, $scoring_method, $CLASSIClikelihood, $CLASSICimpact, $CVSSAccessVector, $CVSSAccessComplexity, $CVSSAuthentication, $CVSSConfImpact, $CVSSIntegImpact, $CVSSAvailImpact, $CVSSExploitability, $CVSSRemediationLevel, $CVSSReportConfidence, $CVSSCollateralDamagePotential, $CVSSTargetDistribution, $CVSSConfidentialityRequirement, $CVSSIntegrityRequirement, $CVSSAvailabilityRequirement, $DREADDamage, $DREADReproducibility, $DREADExploitability, $DREADAffectedUsers, $DREADDiscoverability, $OWASPSkillLevel, $OWASPMotive, $OWASPOpportunity, $OWASPSize, $OWASPEaseOfDiscovery, $OWASPEaseOfExploit, $OWASPAwareness, $OWASPIntrusionDetection, $OWASPLossOfConfidentiality, $OWASPLossOfIntegrity, $OWASPLossOfAvailability, $OWASPLossOfAccountability, $OWASPFinancialDamage, $OWASPReputationDamage, $OWASPNonCompliance, $OWASPPrivacyViolation, $custom, $ContributingLikelihood, $ContributingImpacts);
 
-  // Tag assets to risk
-  tag_assets_to_risk($last_insert_id, $assets);
+    // Process the data from the Affected Assets widget
+    if (!empty($assets_asset_groups))
+        process_selected_assets_asset_groups_of_type($last_insert_id, $assets_asset_groups, 'risk');
 
-  // If a file was submitted
-  if (!empty($_FILES))
-  {
-    for($i=0; $i<count($_FILES['file']['name']); $i++){
-        if($_FILES['file']['error'][$i] || $i==0){
-           continue; 
-        } 
-        $file = array(
-            'name'      => $_FILES['file']['name'][$i],
-            'type'      => $_FILES['file']['type'][$i],
-            'tmp_name'  => $_FILES['file']['tmp_name'][$i],
-            'size'      => $_FILES['file']['size'][$i],
-            'error'     => $_FILES['file']['error'][$i],
-        );
-        // Upload any file that is submitted
-        upload_file($last_insert_id, $file, 1);
+    if (is_array($risk_tags))
+        $risk_tags = implode("+++", $risk_tags);
+    create_new_tag_from_string($risk_tags, "+++", "risk", $last_insert_id);
+//    if (!is_array($risk_tags))
+//        $risk_tags = explode(",", $risk_tags);
+//    add_tagges($risk_tags, $last_insert_id, 'risk');
+    
+    // Create the connection between the risk and the jira issue
+    if (jira_extra() && $issue_key && jira_update_risk_issue_connection($last_insert_id, $issue_key)) {
+        jira_push_changes($issue_key, $last_insert_id);
     }
-  }
 
-  // If the notification extra is enabled
-  if (notification_extra())
-  {
-    // Include the team separation extra
-    require_once(realpath(__DIR__ . '/../extras/notification/index.php'));
+    $error = 1;
+    // If a file was submitted
+    if (!empty($_FILES))
+    {
+        for($i=0; $i<count($_FILES['file']['name']); $i++){
+            if($_FILES['file']['error'][$i] || $i==0){
+               continue; 
+            } 
+            $file = array(
+                'name'      => $_FILES['file']['name'][$i],
+                'type'      => $_FILES['file']['type'][$i],
+                'tmp_name'  => $_FILES['file']['tmp_name'][$i],
+                'size'      => $_FILES['file']['size'][$i],
+                'error'     => $_FILES['file']['error'][$i],
+            );
+            // Upload any file that is submitted
+            $error = upload_file($last_insert_id, $file, 1);
+            if($error != 1){
+                /**
+                * If error, stop uploading files;
+                */
+                break;
+            }
+            
+        }
+    }
+    // Otherwise, success
+    else $error = 1;
 
-    // Send the notification
-    notify_new_risk($last_insert_id, $subject);
-  }
+    // If there was an error in submitting.
+    if($error != 1)
+    {
+        // Delete risk
+        delete_risk($last_insert_id);
 
-  // There is an alert message
-  $risk_id = $last_insert_id + 1000;
+        // Display an alert
+        ob_end_clean();
+        set_alert(true, "bad", $error);
+        json_response(400, get_alert(true), NULL);
+        exit;
+    }
+    else 
+    {
+        // If the notification extra is enabled
+        if (notification_extra())
+        {
+            // Include the team separation extra
+            require_once(realpath(__DIR__ . '/../extras/notification/index.php'));
 
-  // Display an alert
-  set_alert(true, "good", "Risk ID " . $risk_id . " submitted successfully!");
+            // Send the notification
+            notify_new_risk($last_insert_id, $subject);
+        }
 
-  echo "<script> var global_risk_id = " . $risk_id . ";</script>";
+        // There is an alert message
+        $risk_id = (int)$last_insert_id + 1000;
+
+        //// If the jira extra is enabled
+        //if (jira_extra())
+        //{
+        //    // Include the team jira extra
+        //    require_once(realpath(__DIR__ . '/../extras/jira/index.php'));
+        //
+        //    jira_push_changes_of_risk((int)$last_insert_id);
+        //}
+
+        echo "<script> var global_risk_id = " . $risk_id . ";</script>";
+
+        // Display an alert   
+        ob_end_clean();
+        set_alert(true, "good", _lang("RiskSubmitSuccess", ["subject" => $subject]), false);
+        json_response(200, get_alert(true), array("risk_id" => $risk_id));
+        exit;
+    }
+
 }
 
 
@@ -219,23 +285,35 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
 <html>
 
     <head>
-        <script src="../js/jquery.min.js"></script>
-        <script src="../js/jquery-ui.min.js"></script>
+        <script>
+            var simplerisk = {
+                risk: "<?php echo $lang['Risk']; ?>",
+	            newrisk: "<?php echo $lang['NewRisk']; ?>"
+            }
+            
+        </script>
+        <!--script src="../js/jquery.min.js"></script>
+        <script src="../js/jquery-ui.min.js"></script -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js" ></script>
+
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
         <script src="../js/bootstrap.min.js"></script>
         <script src="../js/jquery.dataTables.js"></script>
-        <script src="../js/cve_lookup.js"></script>
+        <script src="../js/cve_lookup.js?<?php echo time() ?>"></script>
         <script src="../js/basescript.js"></script>
-        <script src="../js/common.js"></script>
-        <script src="../js/pages/risk.js"></script>
+        <script src="../js/common.js?<?php echo time() ?>"></script>
+        <script src="../js/pages/risk.js?<?php echo time() ?>"></script>
         <script src="../js/highcharts/code/highcharts.js"></script>
         <script src="../js/bootstrap-multiselect.js"></script>
+        <script src="../js/jquery.blockUI.min.js"></script>
 
         <title>SimpleRisk: Enterprise Risk Management Simplified</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
         <link rel="stylesheet" href="../css/bootstrap.css">
         <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-        <link rel="stylesheet" href="../css/jquery-ui.min.css">
+<!--        <link rel="stylesheet" href="../css/jquery-ui.min.css">-->
 
         <link rel="stylesheet" href="../css/jquery.dataTables.css">
         <link rel="stylesheet" href="../css/divshot-util.css">
@@ -246,7 +324,12 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
         <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
         <link rel="stylesheet" href="../css/theme.css">
 
-        <?php display_asset_autocomplete_script(get_entered_assets()); ?>
+        <link rel="stylesheet" href="../css/selectize.bootstrap3.css">
+        <script src="../js/selectize.min.js"></script>
+
+        <?php
+            setup_alert_requirements("..");
+        ?>
     </head>
 
     <body>
@@ -257,7 +340,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
             // Get any alert messages
             get_alert();
         ?>
-        <div id="risk_hid_id" style="display: none"  > <?php if (isset($risk_id)) echo $escaper->escapeHtml($risk_id);?></div>
+        
         <div class="tabs new-tabs">
         <div class="container-fluid">
 
@@ -270,7 +353,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
                 <span>+</span>
               </div>
               <div class="tab-append">
-                <div class="tab selected form-tab tab-show new" id="tab"><div><span>New Risk (1)</span></div>
+                <div class="tab selected form-tab tab-show new" id="tab"><div><span><?php echo $escaper->escapeHtml($lang['NewRisk']); ?> (1)</span></div>
                   <button class="close tab-close" aria-label="Close" data-id=""><i class="fa fa-close"></i></button>
                 </div>
               </div>
@@ -286,8 +369,6 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
               <?php view_risk_management_menu("SubmitYourRisks"); ?>
             </div>
             <div class="span9">
-
-              <div id="show-alert"></div>
 
               <div class="row-fluid" id="tab-content-container">
                 <div class='tab-data' id="tab-container">
@@ -313,7 +394,9 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
         <input type="hidden" id="enable_popup" value="<?php echo get_setting('enable_popup'); ?>">
         <script>
             $(document).ready(function() {
-
+                
+                setupAssetsAssetGroupsWidget($('#tab-container select.assets-asset-groups-select'));
+                
                 window.onbeforeunload = function() {
                     if ($('#subject:enabled').val() != ''){
                         return "Are you sure you want to procced without saving the risk?";
@@ -335,7 +418,7 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
 
                     $('.tab-show').removeClass('selected');
                     $("div.tab-append").prepend(
-                        "<div class='tab new tab-show form-tab selected' id='tab"+num_tabs+"'><div><span>New Risk ("+num_tabs+")</span></div>"
+                        "<div class='tab new tab-show form-tab selected' id='tab"+num_tabs+"'><div><span><?php echo $escaper->escapeHtml($lang['NewRisk']); ?> ("+num_tabs+")</span></div>"
                         +"<button class='close tab-close' aria-label='Close' data-id='"+num_tabs+"'>"
                         +"<i class='fa fa-close'></i>"
                         +"</button>"
@@ -346,7 +429,8 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
                         "<div class='tab-data' id='tab-container"+num_tabs+"'>"+form+"</div>"
                     );
 
-                    focus_add_css_class("#AffectedAssetsTitle", "#assets", $("#tab-container" + num_tabs));
+                    setupAssetsAssetGroupsWidget($('#tab-container'+num_tabs+' select.assets-asset-groups-select'));
+                    
                     focus_add_css_class("#RiskAssessmentTitle", "#assessment", $("#tab-container" + num_tabs));
                     focus_add_css_class("#NotesTitle", "#notes", $("#tab-container" + num_tabs));
 
@@ -359,63 +443,22 @@ if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQ
                         .attr('id', 'file_upload'+num_tabs)
                         .prev('label').attr('for', 'file_upload'+num_tabs);
                     
-
-                    $( "#tab-container"+num_tabs +" .assets" )
-                        .bind( "keydown", function( event ) {
-                            if ( event.keyCode === $.ui.keyCode.TAB && $( this ).autocomplete( "instance" ).menu.active ) {
-                                event.preventDefault();
-                            }
-                        })
-                        .autocomplete({
-                            minLength: 0,
-                            source: function( request, response ) {
-                                // delegate back to autocomplete, but extract the last term
-                                response( $.ui.autocomplete.filter(
-                                availableAssets, extractLast( request.term ) ) );
-                            },
-                            focus: function() {
-                                // prevent value inserted on focus
-                                return false;
-                            },
-                            select: function( event, ui ) {
-                                var terms = split( this.value );
-                                // remove the current input
-                                terms.pop();
-                                // add the selected item
-                                terms.push( ui.item.value );
-                                // add placeholder to get the comma-and-space at the end
-                                terms.push( "" );
-                                terms = terms.reverse().filter(function (e, i, arr) {
-                                    return arr.indexOf(e, i+1) === -1;
-                                }).reverse();
-
-                                this.value = terms.join( ", " );
-                                return false;
-                            }
-                        })
-                        .focus(function(){
-                            var self = $(this);
-                            window.setTimeout(function(){
-                                self.autocomplete("search", "");
-                            }, 1000)
-                        });
                         
                     // Add multiple selctets
-                    $('.multiselect', "#tab-container"+num_tabs).multiselect();
-
+                    $('.multiselect', "#tab-container"+num_tabs).multiselect({buttonWidth: '100%'});
+                    
+                    // Add DatePicker
+                    if($('.datepicker', "#tab-container"+num_tabs).length){
+                        $('.datepicker', "#tab-container"+num_tabs).datepicker();
+                    }
                 });
 
-
-                function sleep(ms) {
-                    return new Promise(resolve => setTimeout(resolve, ms));
-                }
-
-                focus_add_css_class("#AffectedAssetsTitle", "#assets", $("#tab-container"));
                 focus_add_css_class("#RiskAssessmentTitle", "#assessment", $("#tab-container"));
                 focus_add_css_class("#NotesTitle", "#notes", $("#tab-container"));
                 
             });
 
         </script>
+        <?php display_set_default_date_format_script(); ?>
     </body>
 </html>

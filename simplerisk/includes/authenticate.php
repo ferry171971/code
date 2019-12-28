@@ -10,6 +10,45 @@ require_once(realpath(__DIR__ . '/functions.php'));
 require_once(realpath(__DIR__ . '/messages.php'));
 require_once(realpath(__DIR__ . '/alerts.php'));
 
+
+
+
+$possible_permissions = [
+    'governance',
+    'riskmanagement',
+    'compliance',
+    'assessments',
+    'asset',
+    'admin',
+    'review_veryhigh',
+    'accept_mitigation',
+    'review_high',
+    'review_medium',
+    'review_low',
+    'review_insignificant',
+    'submit_risks',
+    'modify_risks',
+    'plan_mitigations',
+    'close_risks',
+    'add_new_frameworks',
+    'modify_frameworks',
+    'delete_frameworks',
+    'add_new_controls',
+    'modify_controls',
+    'delete_controls',
+    'add_documentation',
+    'modify_documentation',
+    'delete_documentation',
+    'comment_risk_management',
+    'comment_compliance',
+    'view_exception',
+    'create_exception',
+    'update_exception',
+    'delete_exception',
+    'approve_exception'
+];
+
+
 /*******************************
  * FUNCTION: OLD GENERATE SALT *
  *******************************/
@@ -93,11 +132,11 @@ function get_user_type($user, $upgrade = false)
         else $stmt = $db->prepare("SELECT type FROM user WHERE enabled = 1 AND lockout = 0 AND username = :user");
     }
 
-        $stmt->bindParam(":user", $user, PDO::PARAM_STR, 200);
-        $stmt->execute();
+    $stmt->bindParam(":user", $user, PDO::PARAM_STR, 200);
+    $stmt->execute();
 
-        // Store the list in the array
-        $array = $stmt->fetchAll();
+    // Store the list in the array
+    $array = $stmt->fetchAll();
 
     // If the user does not exist
     if (empty($array))
@@ -113,8 +152,8 @@ function get_user_type($user, $upgrade = false)
         $type = "DNE";
     }
 
-        // Close the database connection
-        db_close($db);
+    // Close the database connection
+    db_close($db);
 
     return $type;
 }
@@ -135,8 +174,40 @@ function is_valid_user($user, $pass, $upgrade = false)
     // If the user does not exist
     if ($type == "DNE")
     {
-        // Return that the user is not valid
-        return false;
+        // Write the debug log
+        write_debug_log("Not a valid user in SimpleRisk.");
+
+        // If we should automatically add new users with a default role
+        if (get_setting('AUTHENTICATION_ADD_NEW_USERS') == 1)
+        {
+            // If custom authentication is enabled
+            if (custom_authentication_extra())
+            {
+                // Include the custom authentication extra
+                require_once(realpath(__DIR__ . '/../extras/authentication/index.php'));
+
+                // Set the type to LDAP
+                $type = "ldap";
+
+                // Check for a valid Active Directory user
+                list($valid_ad, $dn, $attributes) = is_valid_ad_user($user, $pass);
+
+                // If the user is a valid AD user
+                if ($valid_ad)
+                {
+                    // Add the new user
+                    $user_id = authentication_add_new_user($type, $user, $attributes);
+
+                    // Add the new team by AD group
+                    set_team_to_ldap_user($user_id, $dn, $pass);
+                    
+                }
+            }
+            // Otherwise, return that the user is not valid
+            else return false;
+        }
+        // Otherwise, return that the user is not valid
+        else return false;
     }
     // If the type is simplerisk
     else if ($type == "simplerisk")
@@ -154,7 +225,7 @@ function is_valid_user($user, $pass, $upgrade = false)
             require_once(realpath(__DIR__ . '/../extras/authentication/index.php'));
 
             // Check for a valid Active Directory user
-            $valid_ad = is_valid_ad_user($user, $pass);
+            list($valid_ad, $dn, $attributes)= is_valid_ad_user($user, $pass);
         }
     }
     // If the type is saml
@@ -172,11 +243,7 @@ function is_valid_user($user, $pass, $upgrade = false)
     }
 
     // If either the SAML, AD, or SimpleRisk user are valid
-    if ($valid_saml || $valid_ad || $valid_simplerisk)
-    {
-        // Set the user permissions
-        set_user_permissions($user, $pass, $upgrade);
-
+    if ($valid_saml || $valid_ad || $valid_simplerisk) {
         return true;
     }
     else return false;
@@ -185,8 +252,10 @@ function is_valid_user($user, $pass, $upgrade = false)
 /**********************************
  * FUNCTION: SET USER PERMISSIONS *
  **********************************/
-function set_user_permissions($user, $pass, $upgrade = false)
+function set_user_permissions($user, $upgrade = false)
 {
+    global $possible_permissions;
+
     // Open the database connection
     $db = db_open();
     
@@ -197,12 +266,14 @@ function set_user_permissions($user, $pass, $upgrade = false)
         if (get_setting('strict_user_validation') == 0)
         {
             // Query the DB for the users complete information
-            $stmt = $db->prepare("SELECT value, type, name, lang, governance, riskmanagement, compliance, assessments, asset, admin, custom_display_settings, review_veryhigh, review_high, review_medium, review_low, review_insignificant, submit_risks, modify_risks, plan_mitigations, close_risks FROM user WHERE LOWER(convert(`username` using utf8)) = LOWER(:user)");
+            $stmt = $db->prepare("
+                SELECT value, type, name, lang, custom_display_settings, " . implode(',', $possible_permissions) . "
+                FROM user WHERE LOWER(convert(`username` using utf8)) = LOWER(:user); ");
         }
         else
         {
             // Query the DB for the users complete information
-            $stmt = $db->prepare("SELECT value, type, name, lang, governance, riskmanagement, compliance, assessments, asset, admin, custom_display_settings, review_veryhigh, review_high, review_medium, review_low, review_insignificant, submit_risks, modify_risks, plan_mitigations, close_risks FROM user WHERE username = :user");
+            $stmt = $db->prepare("SELECT value, type, name, lang, custom_display_settings, " . implode(',', $possible_permissions) . " FROM user WHERE username = :user; ");
         }
     }
     // If we are doing an upgrade
@@ -227,21 +298,10 @@ function set_user_permissions($user, $pass, $upgrade = false)
     // Store the list in the array
     $array = $stmt->fetchAll();
 
-    // Get base url
-    $base_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}";
-    $base_url = htmlspecialchars( $base_url, ENT_QUOTES, 'UTF-8' );
-    $base_url = pathinfo($base_url)['dirname'];
-
-    // Filter out authentication extra from the base url
-    $base_url = str_replace("/extras/authentication", "", $base_url);
-
-    // Set the timezone
-    $default_timezone = get_setting("default_timezone");
-    if (!$default_timezone) $default_timezone = "America/Chicago";
-    date_default_timezone_set($default_timezone);
+    // Set the simplerisk timezone for any datetime functions
+    set_simplerisk_timezone();
 
     // Set the minimal session values
-    $_SESSION['base_url'] = $base_url;
     $_SESSION['uid'] = $array[0]['value'];
     $_SESSION['user'] = $user;
     $_SESSION['name'] = $array[0]['name'];
@@ -251,32 +311,22 @@ function set_user_permissions($user, $pass, $upgrade = false)
     // If we are not doing an upgrade
     if (!$upgrade)
     {
-        // Set additional session values
-	$_SESSION['governance'] = $array[0]['governance'];
-	$_SESSION['riskmanagement'] = $array[0]['riskmanagement'];
-	$_SESSION['compliance'] = $array[0]['compliance'];
-        $_SESSION['assessments'] = $array[0]['assessments'];
-        $_SESSION['asset'] = $array[0]['asset'];
-        $_SESSION['review_veryhigh'] = $array[0]['review_veryhigh'];
-        $_SESSION['review_high'] = $array[0]['review_high'];
-        $_SESSION['review_medium'] = $array[0]['review_medium'];
-        $_SESSION['review_low'] = $array[0]['review_low'];
-        $_SESSION['review_insignificant'] = $array[0]['review_insignificant'];
-        $_SESSION['submit_risks'] = $array[0]['submit_risks'];
-        $_SESSION['modify_risks'] = $array[0]['modify_risks'];
-        $_SESSION['close_risks'] = $array[0]['close_risks'];
-        $_SESSION['plan_mitigations'] = $array[0]['plan_mitigations'];
         $_SESSION['custom_display_settings'] = empty($array[0]['custom_display_settings']) ? array() : json_decode($array[0]['custom_display_settings'], true);
 
-        // If the encryption extra is enabled
-        if (encryption_extra())
-        {
-            // Load the extra
-            require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
-
-            // Set the encrypted password in the session
-            $_SESSION['encrypted_pass'] = get_enc_pass($user, fetch_tmp_pass());
+        // Set permissions
+        foreach($possible_permissions as $permission) {
+            $_SESSION[$permission] = $array[0][$permission];
         }
+
+//        // If the encryption extra is enabled
+//        if (encryption_extra())
+//        {
+            // Load the extra
+//            require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
+//            
+            // Set the encrypted password in the session
+//            $_SESSION['encrypted_pass'] = get_enc_pass($user, fetch_tmp_pass());
+//        }
     }
 
     // If the users language is not null
@@ -317,6 +367,38 @@ function grant_access()
     $risk_id = 1000;
     $message = "Username \"" . $_SESSION['user'] . "\" logged in successfully.";
     write_log($risk_id, $_SESSION['uid'], $message);
+}
+
+/************************************************************************************
+ * FUNCTION: FAKE SIMPLERISK USER VALIDITY CHECK                                    *
+ * This function's only purpose to spend the same time we're using when             *
+ * checking an EXISTING user's credentials.                                         *
+ * It's to prevent an attacker gathering usernames using time based enumeration.    *
+ ************************************************************************************/
+function fake_simplerisk_user_validity_check() {
+
+    $db = db_open();
+
+    // Get a random username
+    $stmt = $db->prepare("
+        SELECT
+            `username`
+        FROM
+            `user`
+        ORDER BY
+            RAND()
+        LIMIT
+            1;
+    ");
+
+    $stmt->execute();
+
+    $username = $stmt->fetchColumn();
+
+    db_close($db);
+
+    // Do a validity check with a random password
+    is_valid_simplerisk_user($username, generate_token(40));
 }
 
 /**************************************
@@ -360,7 +442,7 @@ function is_valid_simplerisk_user($user, $pass)
     db_close($db);
 
     // If the passwords are equal
-    if (($providedPassword == $storedPassword) || ($oldProvidedPassword == $storedPassword))
+    if (hash_equals($storedPassword, $providedPassword) || hash_equals($storedPassword, $oldProvidedPassword))
     {
         return true;
     }
@@ -410,15 +492,22 @@ function is_simplerisk_user($username)
  ****************************/
 function generate_token($size)
 {               
-        $token = "";
-        $values = array_merge(range(0, 9), range('a', 'z'), range('A', 'Z'));
+    $token = "";
+    $values = array_merge(range(0, 9), range('a', 'z'), range('A', 'Z'));
+	$values_count = count($values);
         
-        for ($i = 0; $i < $size; $i++)
+    for ($i = 0; $i < $size; $i++)
+    {
+        // If the random int function exists (PHP 7)
+        if (function_exists('random_int'))
         {
-                $token .= $values[array_rand($values)];
+            // Generate the token using the random_int function
+            $token .= $values[random_int(0, $values_count-1)];
         }
- 
-        return $token;
+        else $token .= $values[array_rand($values)];
+    }
+
+    return $token;
 }
 
 /****************************************
@@ -463,24 +552,6 @@ function password_reset_by_userid($userid)
     $username = $array[0]['username'];
     $name = $array[0]['name'];
     $email = $array[0]['email'];
-    
-    // Update user encryptied_pass if encryption_level is "user" and activated=1.
-    if (encryption_extra())
-    {
-        // Load the extra
-        require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
-        if(activated_user($username)){
-
-            $tmp_pass = fetch_tmp_pass() . ":" . $array[0]['salt'];
-            $encrypted_pass = encrypt($tmp_pass, $_SESSION['encrypted_pass']);
-            
-            // Insert into the password reset table
-            $stmt = $db->prepare("UPDATE `user_enc` set `encrypted_pass` = '{$encrypted_pass}', activated=0 where value=:userid ");
-            $stmt->bindParam(':userid', $userid, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-    }
-    
 
     // Insert into the password reset table
     $stmt = $db->prepare("INSERT INTO password_reset (`username`, `token`) VALUES (:username, :token)");
@@ -521,7 +592,7 @@ function password_reset_by_userid($userid)
 function send_reset_email($username, $name, $email, $token)
 {
     $to = $email;
-    $subject = "[SIMPLERISK] Password Reset Token";
+    $subject = "Password Reset Token";
 
     // To send HTML mail, the Content-type header must be set
     $headers = "MIME-Version: 1.0\r\n";
@@ -575,24 +646,6 @@ function password_reset_by_token($username, $token, $password, $repeat_password)
 {
     global $lang, $escaper;
     $userid = is_simplerisk_user($username);
-    
-    // If the encryption extra is enabled
-    if (encryption_extra())
-    {
-        // Load the extra
-        require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
-        
-        // Check if can be encrypted from external
-        if(!check_encryption_from_external($username)){
-            
-            // Display an alert
-            set_alert(true, "bad", $escaper->escapeHtml($lang['ResetPasswordMessageInUserLevelEncryption']));
-
-            // Return false
-            return false;
-        }
-    }
-    
 
     // If the reset token is valid
     if (is_valid_reset_token($username, $token))
@@ -614,23 +667,13 @@ function password_reset_by_token($username, $token, $password, $repeat_password)
                 $hash = generateHash($salt, $password);
 
                 // Update the password
-                $stmt = $db->prepare("UPDATE user SET password=:hash WHERE username=:username");
+                $stmt = $db->prepare("UPDATE user SET password=:hash, last_password_change_date=NOW() WHERE username=:username");
                 $stmt->bindParam(":hash", $hash, PDO::PARAM_STR, 60);
                 $stmt->bindParam(":username", $username, PDO::PARAM_STR, 200);
                 $stmt->execute();
 
                 // Close the database connection
                 db_close($db);
-
-                // If the encryption extra is enabled
-                if (encryption_extra())
-                {
-                    // Load the extra
-                    require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
-
-                    // Set the new encrypted password
-                    set_enc_pass($username, $password);
-                }
 
                 // Display an alert
                 set_alert(true, "good", "Your password has been reset successfully!");
@@ -660,7 +703,7 @@ function password_reset_by_token($username, $token, $password, $repeat_password)
     else
     {
         // Display an alert
-        set_alert(true, "bad", "There was an error with your password reset.");
+        set_alert(true, "bad", "Invalid user reset token.");
 
         // Return false
         return false;
@@ -880,7 +923,7 @@ function sess_read($sess_id)
         // If the array is empty
         if (empty($array))
         {
-                return false;
+                return '';
         }
         else return $array[0]['data'];
 }
@@ -1138,94 +1181,129 @@ function add_last_password_history($user_id, $old_salt, $old_password)
  **********************************************/
 function check_add_password_reuse_history($user_id, $password)
 {
-    $pass_policy_reuse_limit = get_setting('pass_policy_reuse_limit');
+	$pass_policy_reuse_limit = get_setting('pass_policy_reuse_limit');
 
-    // Open the database connection
-    $db = db_open();
+	// If the password policy reuse limit is 0
+	if ($pass_policy_reuse_limit == 0)
+	{
+		// We don't need to check
+		return true;
+	}
+	else
+	{
+		// Open the database connection
+		$db = db_open();
 
-    // Check if row exists
-    $stmt = $db->prepare("SELECT * FROM user_pass_reuse_history WHERE user_id = :user_id AND password LIKE :password;");
-    $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
-    $stmt->bindParam(":password", $password, PDO::PARAM_STR, 60);
-    $stmt->execute();
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+		// Check if row exists
+		$stmt = $db->prepare("SELECT * FROM user_pass_reuse_history WHERE user_id = :user_id AND password LIKE :password;");
+		$stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
+		$stmt->bindParam(":password", $password, PDO::PARAM_STR, 60);
+		$stmt->execute();
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if(!$result){
-        // Insert new record
-        $stmt = $db->prepare("INSERT INTO user_pass_reuse_history(`user_id`, password) VALUES(:user_id, :password);");
-        $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
-        $stmt->bindParam(":password", $password, PDO::PARAM_STR, 60);
-        $stmt->execute();
-    }elseif($result['counts'] < $pass_policy_reuse_limit){
-        $stmt = $db->prepare("UPDATE user_pass_reuse_history SET `counts`=`counts`+1 WHERE `user_id`=:user_id AND password=:password ");
-        $stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
-        $stmt->bindParam(":password", $password, PDO::PARAM_STR, 60);
-        $stmt->execute();
-    }else{
-        return false;
-    }
+		if(!$result)
+		{
+			// Insert new record
+			$stmt = $db->prepare("INSERT INTO user_pass_reuse_history(`user_id`, password) VALUES(:user_id, :password);");
+			$stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
+			$stmt->bindParam(":password", $password, PDO::PARAM_STR, 60);
+			$stmt->execute();
+		}
+		elseif($result['counts'] < $pass_policy_reuse_limit)
+		{
+			$stmt = $db->prepare("UPDATE user_pass_reuse_history SET `counts`=`counts`+1 WHERE `user_id`=:user_id AND password=:password ");
+			$stmt->bindParam(":user_id", $user_id, PDO::PARAM_INT);
+			$stmt->bindParam(":password", $password, PDO::PARAM_STR, 60);
+			$stmt->execute();
+		}
+		else
+		{
+			return false;
+		}
+	}
     
-    return true;
+	return true;
 }
 
 /****************************
  * FUNCTION: RESET PASSWORD *
  ****************************/
-function reset_password($user_id, $password, $confirm_pass=false)
+function reset_password($user_id, $current_password, $new_password, $confirm_password)
 {
-    global $lang;
+	global $lang;
+
+	// Get the user by the user ID
+	$user = get_user_by_id($user_id);
+	$username = $user['username'];
     
-    
-    if($confirm_pass === false){
-        $confirm_pass = $password;
-    }
-    // Check if password is valid
-    $error_code = valid_password($password, $confirm_pass, $user_id);
-    if ($error_code == 1)
-    {
-        $user = get_user_by_id($user_id);
-        $username = $user['username'];
-        
-        // Generate the salt
-        $salt = generateSalt($username);
+	// If the current password is correct
+	if (is_valid_user($username, $current_password))
+	{
+		// Check if the new password is valid
+        $error_code = valid_password($new_password, $confirm_password, $user_id);
 
-        // Generate the password hash
-        $hash = generateHash($salt, $password);
+		// If the new password is valid
+		if ($error_code == 1)
+		{
+			// Generate the salt
+			$salt = generateSalt($username);
 
-        // If it is possible to reuse password
-        if(check_add_password_reuse_history($user_id, $hash)){
-            // Get user old data
-            $old_data = get_salt_and_password_by_user_id($user_id);
+			// Generate the password hash
+			$hash = generateHash($salt, $new_password);
 
-            // Add the old data to the pass_history table
-            add_last_password_history($user_id, $old_data["salt"], $old_data["password"]);
+			// If it is possible to reuse password
+			if(check_add_password_reuse_history($user_id, $hash))
+			{
+				// Get user old data
+				$old_data = get_salt_and_password_by_user_id($user_id);
 
-            // Update the password
-            update_password($username, $hash);
+				// Add the old data to the pass_history table
+				add_last_password_history($user_id, $old_data["salt"], $old_data["password"]);
 
-            // If the encryption extra is enabled
-            if (encryption_extra())
-            {
-                // Load the extra
-                require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
+				// Update the password
+				update_password($username, $hash);
 
-                // Set the new encrypted password
-                set_enc_pass($username, $password, $_SESSION['encrypted_pass']);
-            }
             
-            // Display an alert
-            set_alert(true, "good", "Your password has been updated successfully!");
+				// Display an alert
+				set_alert(true, "good", "Your password has been updated successfully!");
             
-            if(isset($_SESSION['change_password'])){
-                unset($_SESSION['change_password']);
-            }
+				// Unset the change password value
+				if(isset($_SESSION['change_password']))
+				{
+					unset($_SESSION['change_password']);
+				}
             
-            // Set login status
-            login($username, $password);
-        }else{
-            set_alert(true, "bad", $lang['PasswordNoLongerUse']);
-        }
-    }
+				// Set the user permissions
+				set_user_permissions($username);
+
+				// Get base URL
+				$base_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}{$_SERVER['SCRIPT_NAME']}";
+				$base_url = htmlspecialchars( $base_url, ENT_QUOTES, 'UTF-8' );
+				$base_url = pathinfo($base_url)['dirname'];
+
+				// Filter out authentication extra from the base url
+				$base_url = str_replace("/extras/authentication", "", $base_url);
+				$_SESSION['base_url'] = $base_url;
+
+				// Set login status
+				login($username, $new_password);
+			}
+			else
+			{
+				set_alert(true, "bad", $lang['PasswordNoLongerUse']);
+			}
+		}
+		else
+		{
+			// If the error code was false
+			if ($error_code == false)
+			{
+				// Set an alert
+				set_alert(true, "bad", $lang['NewPasswordDoesNotMatchPolicy']);
+			}
+		}
+	}
+	else set_alert(true, "bad", $lang['PasswordIncorrect']);
 }
 
 /*******************

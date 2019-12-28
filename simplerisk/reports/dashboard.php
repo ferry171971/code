@@ -14,29 +14,21 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-  // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
-        session_name('SimpleRisk');
-        session_start();
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+    session_name('SimpleRisk');
+    session_start();
 }
 
 // Include the language file
@@ -77,10 +69,13 @@ if(isset($_GET['teams'])){
 // Get the risk pie array
 $pie_array = get_pie_array(null, $teams);
 
+// Get the risk location pie array
+$pie_location_array = get_pie_array("location", $teams);
+
 ?>
 
 <!doctype html>
-<html>
+<html lang="<?php echo $escaper->escapehtml($_SESSION['lang']); ?>" xml:lang="<?php echo $escaper->escapeHtml($_SESSION['lang']); ?>">
 
 <head>
   <script src="../js/jquery.min.js"></script>
@@ -98,20 +93,24 @@ $pie_array = get_pie_array(null, $teams);
   <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="../css/theme.css">
   <script type="">
+    function submitForm() {
+        var brands = $('#teams option:selected');
+        var selected = [];
+        $(brands).each(function(index, brand){
+            selected.push($(this).val());
+        });
+        
+        $("#team_options").val(selected.join(","));
+        $("#risks_dashboard_form").submit();
+    }
+  
     $(function(){
         $("#teams").multiselect({
             allSelectedText: '<?php echo $escaper->escapeHtml($lang['AllTeams']); ?>',
             includeSelectAllOption: true,
-            onChange: function(element, checked){
-                var brands = $('#teams option:selected');
-                var selected = [];
-                $(brands).each(function(index, brand){
-                    selected.push($(this).val());
-                });
-                
-                $("#team_options").val(selected.join(","));
-                $("#risks_dashboard_form").submit();
-            }
+            onChange: submitForm,
+            onSelectAll: submitForm,
+            onDeselectAll: submitForm,
         });
     });
   
@@ -137,7 +136,7 @@ $pie_array = get_pie_array(null, $teams);
                 <u><?php echo $escaper->escapeHtml($lang['Teams']); ?></u>: &nbsp;
                 <?php create_multiple_dropdown("teams", ":".implode(":", explode(",", $teams)).":" , NULL, $teamOptions); ?>
                 <form id="risks_dashboard_form" method="GET">
-                    <input type="hidden" value="<?php echo $teams; ?>" name="teams" id="team_options">
+                    <input type="hidden" value="<?php echo $escaper->escapeHtml($teams); ?>" name="teams" id="team_options">
                 </form>
             </div>
         </div>
@@ -155,7 +154,7 @@ $pie_array = get_pie_array(null, $teams);
           </div>
           <div class="span4">
             <div class="well">
-              <?php open_risk_location_pie($pie_array, js_string_escape($lang['SiteLocation'])); ?>
+              <?php open_risk_location_pie($pie_location_array, js_string_escape($lang['SiteLocation'])); ?>
             </div>
           </div>
         </div>

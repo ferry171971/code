@@ -97,6 +97,16 @@ function popupowasp(parent)
     my_window = window.open(BASE_URL + '/management/owasp_rating.php','popupwindow','width=665,height=570,menu=0,status=0');
 }
 
+/**
+* popup when click "Score Using Contributing Risk"
+* 
+*/
+function popupcontributingrisk(parent)
+{
+    parentOfScores = parent;
+    my_window = window.open(BASE_URL + '/management/contributingrisk_rating.php','popupwindow','width=665,height=570,menu=0,status=0');
+}
+
 function closepopup()
     {
     if(false == my_window.closed)
@@ -156,8 +166,7 @@ function riskScoringChart(renderTo, risk_id, risk_levels){
         title: {
             text: $('#_RiskScoringHistory').length ? $("#_RiskScoringHistory").val() : 'Risk Scoring History'
         },
-
-        yAxis: {
+        yAxis: [{
             title: {
                 text: $('#_RiskScore').length ? $('#_RiskScore').val() : "Risk Score"
             },
@@ -165,8 +174,8 @@ function riskScoringChart(renderTo, risk_id, risk_levels){
             max: 10,
             gridLineWidth: 0, 
             plotBands: plotBands,
-        },
-         xAxis: {
+        }],
+        xAxis: [{
             type: 'datetime',
             dateTimeLabelFormats: { // don't display the dummy year
                 millisecond: '%Y-%m-%d<br/>%H:%M:%S',
@@ -180,13 +189,12 @@ function riskScoringChart(renderTo, risk_id, risk_levels){
             title: {
                 text: $("#_DateAndTime").val() ? $("#_DateAndTime").val() : "Date and time"
             }
-        },
+        }],
         legend: {
             layout: 'vertical',
             align: 'right',
             verticalAlign: 'middle'
         },
-
         plotOptions: {
             spline: {
                 marker: {
@@ -194,15 +202,41 @@ function riskScoringChart(renderTo, risk_id, risk_levels){
                 }
             }                    
         },
-
         series: [
-            {name: $('#_RiskScore').length ? $('#_RiskScore').val() : "Risk Score" }
+            {name: $('#_RiskScore').length ? $('#_RiskScore').val() : "Inherent Risk" },
+            {name: $('#_ResidualRiskScore').length ? $('#_ResidualRiskScore').val() : "ResidualRisk Score" },
         ]
 
     });
     
 
     chartObj.showLoading('<img src="../images/progress.gif">');
+    $.ajax({
+        type: "GET",
+        url: BASE_URL + "/api/management/risk/residual_scoring_history?id=" + risk_id,
+        dataType: 'json',
+        success: function(data){
+            var residual_histories = data.data;
+            var residualChartData = [];
+            for(var i=0; i<residual_histories.length; i++){
+                // var date = new Date(histories[i].last_update.replace(/\s/, 'T'));
+                // Added the three lines below to make the timestamp work properly with Safari
+                var parts = residual_histories[i].last_update.split(/[ \/:-]/g);
+                var dateFormatted = parts[1] + "/" + parts[2] + "/" + parts[0] + " " + parts[3] + ":" + parts[4] + ":" + parts[5];
+                var date = new Date(dateFormatted);
+                residualChartData.push([date.getTime(), Number(residual_histories[i].residual_risk)]);
+            }
+            
+            chartObj.series[1].setData(residualChartData)
+            chartObj.hideLoading();
+            
+        },
+        error: function(xhr,status,error){
+            if(xhr.responseJSON && xhr.responseJSON.status_message){
+                showAlertsFromArray(xhr.responseJSON.status_message);
+            }
+        }
+    })
     $.ajax({
         type: "GET",
         url: BASE_URL + "/api/management/risk/scoring_history?id=" + risk_id,
@@ -220,15 +254,115 @@ function riskScoringChart(renderTo, risk_id, risk_levels){
             }
             
             chartObj.series[0].setData(chartData)
+
             chartObj.hideLoading();
             
         },
         error: function(xhr,status,error){
             if(xhr.responseJSON && xhr.responseJSON.status_message){
-                $('#show-alert').html(xhr.responseJSON.status_message);
+                showAlertsFromArray(xhr.responseJSON.status_message);
             }
         }
     })
+}
+
+function alert(message){
+    var modal_container_id = "alert-modal";
+    if(!$("#" + modal_container_id).length){
+        var modal_html = '';
+        modal_html += '<div id="' + modal_container_id + '" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">';
+            modal_html += '<div class="modal-body">';
+
+              modal_html += '<div class="form-group text-center message-container">';
+                modal_html += '<label class="message">'+message+'</label>'
+              modal_html += '</div>';
+
+              modal_html += '<div class="form-group text-center">';
+                modal_html += '<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true">OK</button>';
+              modal_html += '</div>';
+            modal_html += '</div>';
+        modal_html += '</div>';
+        $("body").append(modal_html);
+    }
+    
+    $("#" + modal_container_id+" .message").html(message);
+    
+    $("#" + modal_container_id).modal('show');
+}
+
+function confirm(message, callback){
+    var modal_container_id = "confirm-modal";
+    if(!$("#" + modal_container_id).length){
+        var modal_html = '';
+        modal_html += '<div id="' + modal_container_id + '" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true">';
+            modal_html += '<div class="modal-body">';
+
+              modal_html += '<div class="form-group text-center message-container">';
+                modal_html += '<label class="message">'+message+'</label>'
+              modal_html += '</div>';
+
+              modal_html += '<div class="form-group text-center">';
+                modal_html += '<button class="btn btn-default " data-dismiss="modal" aria-hidden="true" >Cancel</button>';
+                modal_html += '&nbsp;&nbsp;&nbsp;';
+                modal_html += '<button class="btn btn-danger" data-dismiss="modal" aria-hidden="true" onclick="'+ callback +'">Yes</button>';
+              modal_html += '</div>';
+            modal_html += '</div>';
+        modal_html += '</div>';
+        $("body").append(modal_html);
+    }
+    
+    $("#" + modal_container_id+" .message").html(message);
+    
+    $("#" + modal_container_id).modal('show');
+}
+
+function checkAndSetValidation(container)
+{
+    var issue_els = [];
+    $("input, select, textarea", container).each(function(){
+        if($(this).prop('required') && (!$.trim($(this).val()) || (Array.isArray($(this).val()) && $(this).val().length==0) ) ){
+            issue_els.push($(this));
+        }
+    })
+    // If issue elements exist, stop progress
+    if(issue_els.length > 0)
+    {
+        var error_messages = [];
+        issue_els.reverse();
+        for(var key in issue_els){
+            var issue_el = issue_els[key];
+            
+            if(issue_el.parent().hasClass("multiselect-native-select")){
+                issue_el.parent().find("button.multiselect").addClass("error")
+                issue_el.parent().find("button.multiselect").focus()
+            }else{
+                issue_el.addClass("error");
+                issue_el.focus()
+            }
+            var message = field_required_lang.replace("_XXX_", issue_el.attr("title"))
+            showAlertFromMessage(message, false)
+        }
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+var loading={
+    show:function(el)
+    {
+        this.getID(el).style.display='';
+    },
+    hide:function(el)
+    {
+        this.getID(el).style.display='none';
+    },
+    getID:function(el)
+    {
+        return document.getElementById(el);
+    }
 }
 
 $(document).ready(function(){
@@ -256,7 +390,6 @@ $(document).ready(function(){
     })
     
     $(document).on('change', '.hidden-file-upload.active', function(event) {
-//        event.preventDefault();
         var $parent = $(this).parents('.file-uploader');
         $(this).removeClass("active")
         var currentButtonId = $(this).attr('id');
@@ -278,7 +411,6 @@ $(document).ready(function(){
                 $('.score-overtime-container', tabContainer).show();
 
                 var risk_levels = result.data.risk_levels;
-                
                 riskScoringChart($('.score-overtime-chart', tabContainer)[0], risk_id, risk_levels);
 
                 $('.hide-score-overtime', tabContainer).show();
@@ -286,7 +418,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -306,9 +438,12 @@ $(document).ready(function(){
 
         return false;
     })
+    if($('#tab-container .datepicker').length){
+        $('#tab-container .datepicker').datepicker();
+    }
     
     if($("#tab-container .multiselect").length){
-        $("#tab-container .multiselect").multiselect();
+        $("#tab-container .multiselect").multiselect({buttonWidth: '100%'});
     }
-
+    
 })

@@ -58,6 +58,10 @@
     width: 22px;
     padding-left: 6px;      
   }
+  &--clone{
+    width: 22px;
+    padding-left: 13px;      
+  }
 }
  
 .tab-data{
@@ -109,13 +113,24 @@
     }
     .datagrid{
 /*        border-left: 1px solid #d1d3d4;*/
+
+
+        .datagrid-row>td:first-child .tree-title {
+            white-space: normal !important;
+            height: auto;
+        }
+
+        .datagrid-row>td:first-child>.datagrid-cell {
+            white-space: nowrap !important;
+        }
     }
     .datagrid-btable tr td:first-child, .datagrid-htable tr td:first-child{
         border-left: 1px solid #d1d3d4;
     }
-    
+    .datagrid-cell{
+        white-space: normal;
+    }
 }
-
 
 .framework-block,
 .framework-block-unassined {

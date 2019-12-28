@@ -1,3 +1,12 @@
+var current_tab_close_object;
+function close_current_tab(index)
+{
+    $('#tab-container'+index+'').remove();
+    current_tab_close_object.parent().remove();
+    $('.tab-show').first().addClass('selected');
+    $('.tab-data').first().show();
+}
+
 function addRisk($this){
     var tabContainer = $this.parents('.tab-data');
     var getForm = $this.parent().parent().parent().parent();
@@ -9,65 +18,65 @@ function addRisk($this){
             form.append('file['+j+']', file);
         })
     });
-    $('#show-alert').html('');
+    
+    // Check valiation and stop if failed
+    if(!checkAndSetValidation(tabContainer)) {
+        return false;
+    }
+    loading.show('load');
     $.ajax({
         type: "POST",
-        url: "index.php",
+        url: BASE_URL + "/management/index.php",
         data: form,
         async: true,
         cache: false,
         contentType: false,
         processData: false,
         success: function(data){
-            var message = $(data).filter('#alert');
-            var risk_id = $(data).filter('#risk_hid_id');
-
-            $('#show-alert').html(message);
-            if (message[0].innerText != 'The subject of a risk cannot be empty.'){
-                if (isNaN(index)){
-                    var subject = $('input[name="subject"]', getForm).val();
-                    var subject = subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                    $('#tab span:eq(0)').html('<b>ID:'+risk_id[0].innerText+' </b>'+subject);
-                    //$('#tab span:eq(0)').html('<b>ID:'+risk_id[0].innerText+' </b>'+$('input[name="subject"]', getForm).val());
-                } else {
-                    var subject = $('input[name="subject"]', getForm).val();
-                    var subject = subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                    $('#tab'+index+' span:eq(0)').html('<b>ID:'+risk_id[0].innerText+' </b>'+subject);
-                    //$('#tab'+index+' span:eq(0)').html('<b>ID:'+risk_id[0].innerText+' </b>'+$('input[name="subject"]', getForm).val());
-                }
-//                $('input, select, textarea', getForm).prop('disabled', true);
-                
-                $.ajax({
-                    type: "GET",
-                    url: BASE_URL + "/api/management/risk/viewhtml?id=" + risk_id[0].innerText,
-                    success: function(data){
-                        tabContainer.html(data.data);
-
-                        callbackAfterRefreshTab(tabContainer)
-                    },
-                    error: function(xhr,status,error){
-                        if(xhr.responseJSON && xhr.responseJSON.status_message){
-                            $('#show-alert').html(xhr.responseJSON.status_message);
-                        }
-                    }
-                })
-                $this.prop('disabled', true);
-            } else {
-                $this.removeAttr('disabled');
+            if(data.status_message){
+                showAlertsFromArray(data.status_message);
             }
+            
+            var risk_id = data.data.risk_id;
+
+            if (isNaN(index)){
+                var subject = $('input[name="subject"]', getForm).val();
+                var subject = subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                $('#tab span:eq(0)').html('<b>ID:'+risk_id+' </b>'+subject);
+            } else {
+                var subject = $('input[name="subject"]', getForm).val();
+                var subject = subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                $('#tab'+index+' span:eq(0)').html('<b>ID:'+risk_id+' </b>'+subject);
+            }
+
+            $.ajax({
+                type: "GET",
+                url: BASE_URL + "/api/management/risk/viewhtml?id=" + risk_id,
+                success: function(data){
+                    tabContainer.html(data.data);
+
+                    callbackAfterRefreshTab(tabContainer)
+                },
+                error: function(xhr,status,error){
+                    if(xhr.responseJSON && xhr.responseJSON.status_message){
+                        showAlertsFromArray(xhr.responseJSON.status_message);
+                    }
+                }
+            });
+            $this.prop('disabled', true);
+        },
+        complete: function(){
+            loading.hide('load');
         }
     })
     .fail(function(xhr, textStatus){
-        var obj = $('<div/>').html(xhr.responseText);
-        var token = obj.find('input[name="__csrf_magic"]').val();
-        if(token){
-            $('input[name="__csrf_magic"]').val(token);
-            addRisk($this);
-        }else{
+        if(!retryCSRF(xhr, this))
+        {
             if(xhr.responseJSON && xhr.responseJSON.status_message){
-                $('#show-alert').html(xhr.responseJSON.status_message);
+                showAlertsFromArray(xhr.responseJSON.status_message);
             }
         }
+        $this.removeAttr('disabled');
     });
   }
   
@@ -114,59 +123,16 @@ function addRisk($this){
         
         // if file upload button exists, set the unique ID
         if($(".hidden-file-upload.active", tabContainer).length){
-            $(".hidden-file-upload.active", tabContainer).attr('id', 'file-upload' + tabIndex)
-            $("[for=file-upload]", tabContainer).attr('for', 'file-upload' + tabIndex)
+            $(".hidden-file-upload.active", tabContainer).attr('id', 'file-upload' + tabIndex);
+            $("[for=file-upload]", tabContainer).attr('for', 'file-upload' + tabIndex);
         }
-        
-        /**
-        * Build tab container
-        * 
-        */
-        $(".assets", tabContainer)
-          .bind( "keydown", function( event ) {
-            if ( event.keyCode === $.ui.keyCode.TAB && $( this ).autocomplete( "instance" ).menu.active ) {
-              event.preventDefault();
-            }
-          })
-          .autocomplete({
-                minLength: 0,
-                source: function( request, response ) {
-                // delegate back to autocomplete, but extract the last term
-                response( $.ui.autocomplete.filter(
-                availableAssets, extractLast( request.term ) ) );
-              },
-              focus: function() {
-                // prevent value inserted on focus
-                return false;
-              },
-              select: function( event, ui ) {
-                var terms = split( this.value );
-                // remove the current input
-                terms.pop();
-                // add the selected item
-                terms.push( ui.item.value );
-                // add placeholder to get the comma-and-space at the end
-                terms.push( "" );
 
-                terms = terms.reverse().filter(function (e, i, arr) {
-                    return arr.indexOf(e, i+1) === -1;
-                }).reverse();
+        setupAssetsAssetGroupsWidget($('select.assets-asset-groups-select', tabContainer), riskID);
+        setupAssetsAssetGroupsViewWidget($('select.assets-asset-groups-select-disabled', tabContainer));
 
-                this.value = terms.join( ", " );
-                return false;
-              }
-          })
-        .focus(function(){
-            var self = $(this);
-            window.setTimeout(function(){
-                self.autocomplete("search", "");
-            }, 1000)
-        });
-          
         /**
         * Set background on focus of textarea
         */
-        focus_add_css_class("#AffectedAssetsTitle", "#assets", tabContainer);
         focus_add_css_class("#RiskAssessmentTitle", "#assessment", tabContainer);
         focus_add_css_class("#NotesTitle", "#notes", tabContainer);
         focus_add_css_class("#SecurityRequirementsTitle", "#security_requirements", tabContainer);
@@ -176,13 +142,109 @@ function addRisk($this){
         /**
         * Set Risk Scoring Method dropdown and show/hide the sub views
         */
-        handleSelection($("[name=scoring_method]", tabContainer).val(), tabContainer)
+        handleSelection($("[name=scoring_method]", tabContainer).val(), tabContainer);
         
         /**
         * Build multiselect box
         */
-        $(".multiselect", tabContainer).multiselect();
+        $(".multiselect", tabContainer).multiselect({buttonWidth: '100%'});
     }
+    
+    
+    function setupAssetsAssetGroupsWidget(select_tag, risk_id) {
+
+        // Giving a default value here because IE can't handle
+        // function parameter default values...
+        risk_id = risk_id || 0;
+        
+        if (!select_tag.length)
+            return;
+        
+        var select = select_tag.selectize({
+            sortField: 'text',
+            plugins: ['optgroup_columns', 'remove_button', 'restore_on_backspace'],
+            delimiter: ',',
+            create: function (input){
+                return { id:'new_asset_' + input, name:input };
+            },
+            persist: false,
+            valueField: 'id',
+            labelField: 'name',
+            searchField: 'name',
+            sortField: 'name',
+            optgroups: [
+                {class: 'asset', name: 'Standard Assets'},
+                {class: 'group', name: 'Asset Groups'}
+            ],
+            optgroupField: 'class',
+            optgroupLabelField: 'name',
+            optgroupValueField: 'class',
+            preload: true,
+            render: {
+                item: function(item, escape) {
+                    return '<div class="' + item.class + '">' + escape(item.name) + '</div>';
+                }
+            },
+            onInitialize: function() {
+                if (risk_id != 0)
+                    select_tag.parent().find('.selectize-control div').block({message:'<i class="fa fa-spinner fa-spin" style="font-size:24px"></i>'});
+            },
+            load: function(query, callback) {
+                if (query.length) return callback();
+                $.ajax({
+                    url: '/api/asset-group/options?risk_id=' + risk_id,
+                    type: 'GET',
+                    dataType: 'json',
+                    error: function() {
+                        callback();
+                    },
+                    success: function(res) {
+                        var data = res.data;
+                        var control = select[0].selectize;
+                        var selected_ids = [];
+                        // Have to do it this way, because addition with simple addOption() will
+                        // bug out when we deselect an option(it wouldn't be added back to the
+                        // list of selectable items)
+                        len = data.length;
+                        for (var i = 0; i < len; i++) {
+                            var item = data[i];
+                            item.id += '_' + item.class;
+                            control.registerOption(item);
+                            if (item.selected == '1') {
+                                selected_ids.push(item.id);
+                            }
+                        }
+                        if (selected_ids.length)
+                            control.setValue(selected_ids);
+                    },
+                    complete: function() {
+                        select_tag.parent().find('.selectize-control div').unblock({message:null});
+                    }
+                });
+            }
+        });        
+    }
+    
+    
+    function setupAssetsAssetGroupsViewWidget(select_tag) {
+        
+        if (!select_tag.length)
+            return;
+        
+        var select = select_tag.selectize({
+            sortField: 'text',
+            disabled: true,
+            render: {
+                item: function(item, escape) {
+                    return '<div class="' + item.class + '">' + escape(item.text) + '</div>';
+                }
+            }
+        });
+        
+        select[0].selectize.disable();
+        select_tag.parent().find('.selectize-control div').removeClass('disabled');
+    }    
+    
     
     /*
     * Function to add the css class for textarea title and make it popup.
@@ -276,32 +338,55 @@ $(document).ready(function(){
         }                
     }
 
+    if($.blockUI !== undefined){
+        $.blockUI.defaults.css = {
+            padding: 0,
+            margin: 0,
+            width: '30%',
+            top: '40%',
+            left: '35%',
+            textAlign: 'center',
+            cursor: 'wait'
+        };
+    }
+    $('body').on("click", ".error", function(e){
+        $(this).removeClass("error")
+    });
+
     /**
     * Open new risk
     * 
     */
-    $("td.open-risk a").click(function(e){
+    $('body').on("click", "td.open-risk a", function(e){
         e.preventDefault();
         var riskID = $(this).parents('tr').data('id');
+        if(!riskID){
+            riskID = $(this).parent().data('id');
+        }
         var tabContainerID = addTabContainer();
         var tabContainer = $("#" + tabContainerID);
+
         $.ajax({
             type: "GET",
             url: BASE_URL + "/api/management/risk/viewhtml?id=" + riskID,
             success: function(data){
                 tabContainer.html(data.data);
+                
                 callbackAfterRefreshTab(tabContainer, 0);
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
     })
-    $("td.open-mitigation a").click(function(e){
+    $('body').on("click", "td.open-mitigation a", function(e){
         e.preventDefault();
         var riskID = $(this).parents('tr').data('id');
+        if(!riskID){
+            riskID = $(this).parent().data('id');
+        }
         var tabContainerID = addTabContainer();
         var tabContainer = $("#" + tabContainerID);
         var value = $(this).html().toLowerCase();
@@ -315,14 +400,17 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
     })
-    $("td.open-review a").click(function(e){
+    $('body').on("click", "td.open-review a", function(e){
         e.preventDefault();
         var riskID = $(this).parents('tr').data('id');
+        if(!riskID){
+            riskID = $(this).parent().data('id');
+        }
         var tabContainerID = addTabContainer();
         var tabContainer = $("#" + tabContainerID);
         var value = $(this).html().toLowerCase();
@@ -336,7 +424,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -346,8 +434,7 @@ $(document).ready(function(){
     * RST tab evemts
     * 
     */
-    $('.container-fluid').delegate('.tab-show', 'click', function(){
-        $('#show-alert').html('');
+    $('.container-fluid').delegate('.tab-show', 'click', function(){        
         $('.form-tab').removeClass('selected');
         $(this).addClass('selected');
         var index = $('.tab-close', this).attr('data-id');
@@ -357,19 +444,20 @@ $(document).ready(function(){
     });
 
     $('.container-fluid').delegate('.tab-close', 'click', function(){
+        current_tab_close_object = $(this);
+        
         var index = $(this).attr('data-id');
         var tabContainer = $("#tab-container" + index);
         if ($('div.container-fluid div.new').length > 1)
         {
-            if (!checkEditable(tabContainer) || confirm($("#_delete_tab_alert").val()) ){
-                $('#tab-container'+index+'').remove();
-                $(this).parent().remove();
-                $('.tab-show').first().addClass('selected');
-                $('.tab-data').last().show();
+            if (!checkEditable(tabContainer) || confirm($("#_delete_tab_alert").val(), "close_current_tab('"+index+"')") ){
+                close_current_tab(index)
             }
             return false;
         }
     });
+    
+    
     /*****************/
     
     
@@ -405,7 +493,7 @@ $(document).ready(function(){
                 form.append('file['+j+']', file);
             })
         });
-        $('#show-alert').html('');
+        
         $.ajax({
             type: "POST",
             url: BASE_URL + "/api/management/risk/saveSubject?id=" + risk_id,
@@ -424,20 +512,16 @@ $(document).ready(function(){
                     $('.show-score').hide();
                     $('.hide-score').show();
                 }
-                if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                if(data.status_message){                    
+                    showAlertsFromArray(data.status_message);
                 }
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                updateSubject($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         });
@@ -497,6 +581,10 @@ $(document).ready(function(){
         var risk_id = $('.large-text', tabContainer).html();
         var $this = $(this);
         
+        editDetailsRequest(risk_id, tabContainer);
+    })
+    
+    function editDetailsRequest(risk_id, tabContainer){
         $.ajax({
             type: "GET",
             url: BASE_URL + "/api/management/risk/editdetails?action=editdetail&id=" + risk_id,
@@ -507,12 +595,11 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
-        
-    })
+    }
     
     
     $('body').on('click', '.cancel-edit-details', function(e){
@@ -521,6 +608,10 @@ $(document).ready(function(){
         var risk_id = $('.large-text', tabContainer).html();
         var $this = $(this);
         
+        cancelEditDetailsRequest(risk_id, tabContainer);
+    })
+    
+    function cancelEditDetailsRequest(risk_id, tabContainer){
         $.ajax({
             type: "GET",
             url: BASE_URL + "/api/management/risk/editdetails?id=" + risk_id,
@@ -530,16 +621,21 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
-    })
+    }
     
     function updateRisk($this){
         var tabContainer = $this.parents('.tab-data');
         var risk_id = $('.large-text', tabContainer).html();
-        
+
+        // Check valiation and stop if failed
+        if(!checkAndSetValidation(tabContainer))
+        {
+            return false;
+        }
         var getForm = $this.parents('form', tabContainer);
         var form = new FormData($(getForm)[0]);
         var scoring_method = $("[name=scoring_method]", tabContainer).val();
@@ -549,7 +645,7 @@ $(document).ready(function(){
                 form.append('file['+j+']', file);
             })
         });
-        $('#show-alert').html('');
+
         $.ajax({
             type: "POST",
             url: BASE_URL + "/api/management/risk/saveDetails?id=" + risk_id,
@@ -564,19 +660,15 @@ $(document).ready(function(){
                 getScoreByAction(tabContainer, scoring_method);
 
                 if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                    showAlertsFromArray(data.status_message);
                 }
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                updateRisk($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         });
@@ -608,13 +700,12 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
     })
     
-
     $('body').on('click', '.cancel-edit-mitigation', function(e){
         e.preventDefault();
         var tabContainer = $(this).parents('.tab-data');
@@ -631,7 +722,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -641,6 +732,12 @@ $(document).ready(function(){
         var tabContainer = $this.parents('.tab-data');
         var risk_id = $('.large-text', tabContainer).html();
         
+        // Check valiation and stop if failed
+        if(!checkAndSetValidation(tabContainer))
+        {
+            return false;
+        }
+
         var getForm = $this.parents('form', tabContainer);
         var form = new FormData($(getForm)[0]);
         $.each($("input[type=file]", tabContainer), function(i, obj) {
@@ -648,7 +745,7 @@ $(document).ready(function(){
                 form.append('file['+j+']', file);
             })
         });
-        $('#show-alert').html('');
+
         $.ajax({
             type: "POST",
             url: BASE_URL + "/api/management/risk/saveMitigation?id=" + risk_id,
@@ -663,21 +760,18 @@ $(document).ready(function(){
                 $('.score--wrapper', tabContainer).html(data.score_wrapper_html);
                 callbackAfterRefreshTab(tabContainer, 1);
                 if(result.status_message){
-                    $('#show-alert').html(result.status_message);
+                    showAlertsFromArray(result.status_message);
                 }
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                updateMitigation($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
+
         });
     }
     
@@ -687,8 +781,6 @@ $(document).ready(function(){
     });
     /****** end mitigation *******/
 
-    
-    
     /**** start review *****/
     $('body').on('click', '.perform-review', function(e){
         e.preventDefault();
@@ -706,7 +798,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -728,7 +820,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -738,6 +830,13 @@ $(document).ready(function(){
         var tabContainer = $this.parents('.tab-data');
         var risk_id = $('.large-text', tabContainer).html();
         
+        // Check valiation and stop if failed
+        if(!checkAndSetValidation(tabContainer))
+        {
+            return false;
+        }
+
+        $('.save-review').prop('disabled', true);
         var getForm = $this.parents('form', tabContainer);
         var form = new FormData($(getForm)[0]);
         $.each($("input[type=file]", tabContainer), function(i, obj) {
@@ -745,7 +844,7 @@ $(document).ready(function(){
                 form.append('file['+j+']', file);
             })
         });
-        $('#show-alert').html('');
+        
         $.ajax({
             type: "POST",
             url: BASE_URL + "/api/management/risk/saveReview?id=" + risk_id,
@@ -758,21 +857,19 @@ $(document).ready(function(){
                 $('.content-container', tabContainer).html(data.data);
                 callbackAfterRefreshTab(tabContainer, 2);
                 if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                    showAlertsFromArray(data.status_message);
                 }
+                $('.save-review').prop('disabled', false)
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                updateReview($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
+            $('.save-review').prop('disabled', false);
         });
     }
     
@@ -808,7 +905,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -822,7 +919,6 @@ $(document).ready(function(){
         
         var getForm = $this.parents('form', tabContainer);
         var form = new FormData($(getForm)[0]);
-
         $.ajax({
             type: "POST",
             url: BASE_URL + "/api/management/risk/closerisk?id=" + risk_id,
@@ -835,19 +931,15 @@ $(document).ready(function(){
                 tabContainer.html(data.data);
                 callbackAfterRefreshTab(tabContainer);
                 if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                    showAlertsFromArray(data.status_message);
                 }
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                closeRisk($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         });
@@ -869,7 +961,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -882,7 +974,7 @@ $(document).ready(function(){
         var tabContainer = $(this).parents('.tab-data');
         var risk_id = $('.large-text', tabContainer).html();
         $.ajax({
-            type: "GET",
+            type: "POST",
             url: BASE_URL + "/api/management/risk/reopen?id=" + risk_id,
             success: function(data){
                 if($('.show-score').is(":visible")){
@@ -894,12 +986,13 @@ $(document).ready(function(){
                     $('.show-score').hide();
                     $('.hide-score').show();
                 }
-
-            
             },
             error: function(xhr,status,error){
-                if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                if(!retryCSRF(xhr, this))
+                {
+                    if(xhr.responseJSON && xhr.responseJSON.status_message){
+                        showAlertsFromArray(xhr.responseJSON.status_message);
+                    }
                 }
             }
         })
@@ -924,7 +1017,7 @@ $(document).ready(function(){
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -949,19 +1042,15 @@ $(document).ready(function(){
                 tabContainer.html(data.data);
                 callbackAfterRefreshTab(tabContainer);
                 if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                    showAlertsFromArray(data.status_message);
                 }
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                updateStatus($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         });
@@ -993,10 +1082,21 @@ $(document).ready(function(){
                     $('.show-score').show();
                     $('.hide-score').hide();
                 }
+                
+                /* Update risk scoring method in details tab */
+                // If details tab is in Edit
+                if($('.cancel-edit-details', tabContainer).length){
+                    editDetailsRequest(risk_id, tabContainer);
+                }
+                // If details tab is in View
+                else{
+                    cancelEditDetailsRequest(risk_id, tabContainer);
+                }
+                
             },
             error: function(xhr,status,error){
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
         })
@@ -1040,38 +1140,29 @@ $(document).ready(function(){
                 }
                 
                 if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                    showAlertsFromArray(data.status_message);
                 }
                 
-//                $.ajax({
-//                    type: "GET",
-//                    url: "../api/management/risk/overview?id=" + risk_id,
-//                    success: function(data){
-//                        if($('.show-score').is(":visible")){
-//                            $('.overview-container', tabContainer).html(data.data);
-//                            $('.show-score').show();
-//                            $('.hide-score').hide();
-//                        }else{
-//                            $('.overview-container', tabContainer).html(data.data);
-//                            $('.show-score').hide();
-//                            $('.hide-score').show();
-//                        }
-//                    }
-//                })
-                
+                /* Update risk scoring method in details tab */
+                // If details tab is in Edit
+                if($('.cancel-edit-details', tabContainer).length){
+                    editDetailsRequest(risk_id, tabContainer);
+                }
+                // If details tab is in View
+                else{
+                    cancelEditDetailsRequest(risk_id, tabContainer);
+                }
+
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                updateScore($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
+
         });
     }
     $('body').on('click', '.updatescore button[type=submit]', function(e){
@@ -1130,21 +1221,18 @@ $(document).ready(function(){
                 $(".comment-text", tabContainer).val('')
                 $(".comment-text", tabContainer).focus()
                 if(data.status_message){
-                    $('#show-alert').html(data.status_message);
+                    showAlertsFromArray(data.status_message);
                 }
             }
         })
         .fail(function(xhr, textStatus){
-            var obj = $('<div/>').html(xhr.responseText);
-            var token = obj.find('input[name="__csrf_magic"]').val();
-            if(token){
-                $('input[name="__csrf_magic"]').val(token);
-                saveComment($this);
-            }else{
+            if(!retryCSRF(xhr, this))
+            {
                 if(xhr.responseJSON && xhr.responseJSON.status_message){
-                    $('#show-alert').html(xhr.responseJSON.status_message);
+                    showAlertsFromArray(xhr.responseJSON.status_message);
                 }
             }
+
         });
     }
     $('body').on('click', '.comment-submit', function(e){
@@ -1219,7 +1307,7 @@ $(document).ready(function(){
         var form = $(this).parents('form');
         popupdread(form);
     })
-    
+   
     /**
     * events in clicking Score Using OWASP button of edit details page, muti tabs case
     */
@@ -1229,9 +1317,91 @@ $(document).ready(function(){
         popupowasp(form);
     })
     
+    /**
+    * events in clicking Score Using Contributing Risk button of edit details page, muti tabs case
+    */
+    $('body').on('click', '[name=contributingRiskSubmit]', function(e){
+        e.preventDefault();
+        var form = $(this).parents('form');
+        popupcontributingrisk(form);
+    })
+    
+    /**
+    * Show/Hide Project Name if Next Step is Consider for Project
+    */
+    $('body').on('change', '[name=next_step]', function(){
+        var tabContainer = $(this).parents('.tab-data');
+        var risk_id = $('.large-text', tabContainer).html();
+        
+        var getForm = $(this).parents('form', tabContainer);
+
+        // If Next Step is Consider(value=2) for Project
+        if($(this).val() == 2)
+        {
+            $(".project-holder", tabContainer).show();
+        }
+        else
+        {
+            $(".project-holder", tabContainer).hide();
+        }
+    })
+    
+    /**
+    * Event when click plus button on review formn
+    */
+    $('body').on('click', '.project-holder .set-project', function(e){
+        e.preventDefault();
+        var tabContainer = $(this).parents('.tab-data');
+        var risk_id = $('.large-text', tabContainer).html();
+        var project_id = $("#project_name", tabContainer).val();
+        if(project_id !== ""){
+            $.ajax({
+                type: "POST",
+                url: BASE_URL + "/api/management/risk/setProjectToRisk?id=" + risk_id,
+                data: {
+                    project_id: project_id
+                },
+                success: function(data){
+                    
+                    if(data.status_message){                    
+                        showAlertsFromArray(data.status_message);
+                    }
+                },
+                error: function(xhr,status,error){
+                    if(!retryCSRF(xhr, this))
+                    {
+                        if(xhr.responseJSON && xhr.responseJSON.status_message){
+                            showAlertsFromArray(xhr.responseJSON.status_message);
+                        }
+                    }
+                }
+            })
+        }
+        
+    })
+    
+    /**
+    * Event when change risk owner
+    */
+    $('body').on('change', '[name=owner]', function(e){
+        var form = $(this).closest("form");
+        $.ajax({
+            type: "GET",
+            url: BASE_URL + "/api/user/manager",
+            data: {
+                id: $(this).val()
+            },
+            success: function(res){
+                var data = res.data;
+                if(data.manager){
+                    $("[name=manager]", form).val(data.manager)
+                }
+            }
+        })
+    })
     
 })
 
 
 
-   
+    

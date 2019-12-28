@@ -15,35 +15,25 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-  // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-  session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
-        session_name('SimpleRisk');
-        session_start();
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+      session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+    session_name('SimpleRisk');
+    session_start();
 }
 
 // Include the language file
 require_once(language_file());
-
-require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
 
 // Check for session timeout or renegotiation
 session_check();
@@ -62,6 +52,10 @@ if (!isset($_SESSION["assessments"]) || $_SESSION["assessments"] != "1")
   header("Location: ../index.php");
   exit(0);
 }
+
+// Include the CSRF-magic library
+// Make sure it's called after the session is properly setup
+include_csrf_magic();
 
 // If an assessment was posted
 if (isset($_POST['action']) && $_POST['action'] == "submit")
@@ -118,31 +112,41 @@ else
   // Use the Available Assessments menu
   $menu = "AvailableAssessments";
 }
+
 ?>
 
 <!doctype html>
-<html>
+<html lang="<?php echo $escaper->escapehtml($_SESSION['lang']); ?>" xml:lang="<?php echo $escaper->escapeHtml($_SESSION['lang']); ?>">
 
 <head>
-  <script src="../js/jquery.min.js"></script>
-  <script src="../js/jquery-ui.min.js"></script>
-  <script src="../js/bootstrap.min.js"></script>
-  <script src="../js/pages/assessment.js"></script>
-  <script src="../js/common.js"></script>
-  <script src="../js/cve_lookup.js"></script>
-  <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-  <link rel="stylesheet" href="../css/bootstrap.css">
-  <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-  <link rel="stylesheet" href="../css/jquery-ui.min.css">
-
-  <link rel="stylesheet" href="../css/divshot-util.css">
-  <link rel="stylesheet" href="../css/divshot-canvas.css">
-  <link rel="stylesheet" href="../css/display.css">
-  <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-  <link rel="stylesheet" href="../css/theme.css">
-
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/jquery-ui.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/pages/assessment.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/cve_lookup.js"></script>
+    <script src="../js/jquery.blockUI.min.js"></script>
+    
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="google" content="notranslate">
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../css/jquery-ui.min.css">
+    
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
+  
+    <link rel="stylesheet" href="../css/selectize.bootstrap3.css">
+    <script src="../js/selectize.min.js"></script>
+  
+  <?php
+      setup_alert_requirements("..");
+  ?>  
 </head>
 
 <body>
@@ -158,12 +162,6 @@ else
         <?php view_assessments_menu($menu); ?>
       </div>
       <div class="span9">
-        <div id="show-alert">
-            <?php  
-                // Get any alert messages
-                get_alert();
-            ?>
-        </div>
 
         <?php
         // If the action was create
@@ -222,6 +220,7 @@ else
       </div>
     </div>
   </div>
+    <?php display_set_default_date_format_script(); ?>
 </body>
 
 </html>

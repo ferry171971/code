@@ -46,7 +46,20 @@ CsrfMagic.prototype = {
     //        delete this.csrf_purportedLength;
     //    }
         delete this.csrf_isPost;
-        return this.csrf_send(prepend + data);
+        if(!this.csrf_contentType) this.csrf_contentType = "";
+        if(data === null){
+            data = new FormData();
+            data.append(csrfMagicName, csrfMagicToken);
+            return this.csrf_send(data);
+        }
+        else if(typeof data == "string" && this.csrf_contentType.toLowerCase().indexOf("application/json") == -1){
+            return this.csrf_send(prepend + data);
+        } else if(data instanceof FormData){
+            data.append(csrfMagicName, csrfMagicToken);
+            return this.csrf_send(data);
+        } else {
+            return this.csrf_send(data);
+        }
     },
     csrf_send: function(data) {
         return this.csrf.send(data);
@@ -58,6 +71,9 @@ CsrfMagic.prototype = {
         if (this.csrf_isPost && header == "Content-length") {
             this.csrf_purportedLength = value;
             return;
+        }
+        if(header == "Content-Type"){
+            this.csrf_contentType = value;
         }
         return this.csrf_setRequestHeader(header, value);
     },
@@ -187,5 +203,60 @@ if (window.XMLHttpRequest && window.XMLHttpRequest.prototype && '\v' != 'v') {
         dojo._xhrObj = function () {
             return new CsrfMagic(dojo.csrf__xhrObj());
         }
+    }
+}
+var retryCSRFCount = 1;
+function retryCSRF(xhr, self)
+{
+    if(retryCSRFCount >= 5){
+        retryCSRFCount = 0;
+        return true;
+    }
+        
+    var obj = $('<div/>').html(xhr.responseText);
+    var token = obj.find('input[name=\"__csrf_magic\"]').val();
+    if(token)
+    {
+        $('input[name=\"__csrf_magic\"]').val(token);
+        csrfMagicToken = token;
+        if(self.headers && self.headers['CSRF-TOKEN']){
+            self.headers['CSRF-TOKEN'] = token;
+        }
+        $.ajax(self);
+        retryCSRFCount++;
+        return true;
+    }
+    else
+    {
+        retryCSRFCount = 0;
+        return false;
+    }
+}
+
+
+/**
+Need this function to be able to re-send the datatable's request when it's failing
+because of an expired csrf magic token
+**/
+function retryDatatableCSRF(xhr, api) {
+    if(retryCSRFCount >= 5){
+        retryCSRFCount = 0;
+        return true;
+    }
+
+    var obj = $('<div/>').html(xhr.responseText);
+    var token = obj.find('input[name=\"__csrf_magic\"]').val();
+    if(token)
+    {
+        $('input[name=\"__csrf_magic\"]').val(token);
+        csrfMagicToken = token;
+        api.ajax.reload();
+        retryCSRFCount++;
+        return true;
+    }
+    else
+    {
+        retryCSRFCount = 0;
+        return false;
     }
 }

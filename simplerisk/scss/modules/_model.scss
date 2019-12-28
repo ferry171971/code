@@ -3,6 +3,8 @@
   border-radius: 2px;
   box-shadow: none;
   border:none;
+  max-height: calc(100% - 94px);
+  overflow: auto;  
   padding-top: 20px;
   padding-bottom: 20px;
 
@@ -31,7 +33,24 @@
     box-shadow: none;
 
   }
+  
+  .view-field{
+      color: #fff;
+  }
 
+  select:disabled{
+      background-color: #fff;
+  }
+
+}
+
+#alert-modal{
+    .message-container{
+        margin-bottom: 25px;
+        .message{
+            font-size: 20px;
+        }
+    }
 }
 
 .vertical-alignment-helper {
@@ -63,4 +82,13 @@
 .modal.fade.in {
     top: 50%;
     transform: translateY(-50%);
+}
+
+.modal{
+    .file-uploader{
+        color: #fff;
+        .btn{
+            background: #ed3139
+        }
+    }
 }

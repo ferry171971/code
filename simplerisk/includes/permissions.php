@@ -93,4 +93,104 @@ function enforce_permission_compliance()
         }
 }
 
+/*************************************
+ * FUNCTION: CHECK PERMISSION ASSET *
+ *************************************/
+function check_permission_asset()
+{
+        // Check if asset is authorized
+        if (!isset($_SESSION["asset"]) || $_SESSION["asset"] != 1)
+        {
+                return false;
+        }
+        else return true;
+}
+
+/*******************************************
+ * FUNCTION: ENFORCE PERMISSION ASSET *
+ *******************************************/
+function enforce_permission_asset()
+{
+        // If asset is not authorized
+        if (!check_permission_asset())
+        {
+                header("Location: ../index.php");
+                exit(0);
+        }
+}
+
+/******************************************
+ * FUNCTION: CHECK PERMISSION ASSESSMENTS *
+ ******************************************/
+function check_permission_assessments()
+{
+    // Check if assessments is authorized
+    if (!isset($_SESSION["assessments"]) || $_SESSION["assessments"] != 1)
+    {
+        return false;
+    }
+    else return true;
+}
+
+/********************************************
+ * FUNCTION: ENFORCE PERMISSION ASSESSMENTS *
+ ********************************************/
+function enforce_permission_assessments()
+{
+    // If asset is not authorized
+    if (!check_permission_assessments())
+    {
+        header("Location: ../index.php");
+        exit(0);
+    }
+}
+
+/*************************************
+ * FUNCTION: CHECK PERMISSION ASSET *
+ *************************************/
+$exception_permissions = ['view' ,'create' ,'update' ,'delete' ,'approve'];
+function check_permission_exception($function)
+{
+    global $exception_permissions;
+    return in_array($function, $exception_permissions)
+            && isset($_SESSION["{$function}_exception"])
+            && $_SESSION["{$function}_exception"] == 1;
+}
+
+function enforce_permission_exception($function)
+{
+    // If exception is not authorized
+    if (!check_permission_exception($function))
+    {
+        header("Location: ../index.php");
+        exit(0);
+    }
+}
+
+/********************************************************************************
+ * FUNCTION: CHECK QUESTIONNAIRE GET TOKEN                                      *
+ * Checks if the 'GET' parameter 'token' is a valid questionnaire token.        *
+ * The function is built in a way to only check the database once per request   *
+ * to reduce response time.                                                     *
+ ********************************************************************************/
+function check_questionnaire_get_token() {
+
+    if (!isset($_GET['token']))
+        return false;
+
+    $global_var_name = 'is_valid_questionnaire_token_' . $_GET['token'];
+
+    if (isset($GLOBALS[$global_var_name]))
+        return $GLOBALS[$global_var_name];
+
+    if (assessments_extra()) {
+        require_once(realpath(__DIR__ . '/../extras/assessments/index.php'));
+
+        $GLOBALS[$global_var_name] = is_valid_questionnaire_token($_GET['token']);
+        return $GLOBALS[$global_var_name];
+    }
+
+    $GLOBALS[$global_var_name] = false;
+    return false;
+}
 ?>

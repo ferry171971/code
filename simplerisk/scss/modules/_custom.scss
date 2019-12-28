@@ -13,3 +13,36 @@
         width: auto;
     }
 }
+
+.label-for-edit{
+    cursor: pointer;
+}
+
+.audit-option-container{
+    margin-bottom: 10px;
+    .audit-select-folder{
+        float: left;
+    }
+    .audit-download-folder{
+        float: right;
+        >a{
+            cursor: pointer;
+        }
+        .down-icon{
+            margin-top: -10px;
+        }
+    }
+}
+
+.asset-table-container{
+    overflow-x: auto;
+}
+
+#classic-risk-formula{
+    #impact-label{
+        text-orientation: upright;
+        writing-mode: vertical-lr;
+        width: 25px;
+        
+    }
+}

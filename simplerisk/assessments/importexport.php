@@ -15,27 +15,19 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-        // Add the Content-Security-Policy header
-header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+    session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
     session_name('SimpleRisk');
     session_start();
 }
@@ -101,6 +93,10 @@ if(process_assessment_import()){
 
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+    
+    <?php
+        setup_alert_requirements("..");
+    ?>    
   </head>
 
   <body>
@@ -118,10 +114,10 @@ if(process_assessment_import()){
             </div>
             <div class="span9">
                 <div class="hero-unit">
-                    <?php  display_assessment_contacts_import(); ?>
+                    <?php display_import_of_assessment(); ?>
                 </div>
                 <div class="hero-unit">
-                    <?php  display_assessment_questionnaire_import(); ?>
+                    <?php display_export_of_assessment(); ?>
                 </div>
             </div>
         </div>

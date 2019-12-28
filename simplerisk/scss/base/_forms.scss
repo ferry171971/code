@@ -226,3 +226,13 @@ textarea.saml_metadata_xml{
 .large-control{
     max-width: none !important;
 }
+
+.full-width{
+    width: 100%;
+    max-width: none;
+}
+input, select, textarea, button.multiselect{
+    &.error{
+        border: 2px solid red;
+    }
+}

@@ -10,30 +10,22 @@
     require_once(realpath(__DIR__ . '/../includes/api.php'));
 
     // Add various security headers
-    header("X-Frame-Options: DENY");
-    header("X-XSS-Protection: 1; mode=block");
+    add_security_headers();
 
-    // If we want to enable the Content Security Policy (CSP) - This may break Chrome
-    if (csp_enabled())
+    if (!isset($_SESSION))
     {
-        // Add the Content-Security-Policy header
-        header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-    }
-
-    // Session handler is database
-    if (USE_DATABASE_FOR_SESSIONS == "true")
-    {
-        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-    }
-
-    // Start the session
-    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
-
-        if (!isset($_SESSION))
+        // Session handler is database
+        if (USE_DATABASE_FOR_SESSIONS == "true")
         {
-            session_name('SimpleRisk');
-            session_start();
+            session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
         }
+
+        // Start the session
+        session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
+        session_name('SimpleRisk');
+        session_start();
+    }
 
     // Check for session timeout or renegotiation
     session_check();
@@ -79,13 +71,14 @@
         $results['params'] = '{
           "subject": "Subject",
           "category": "1",
-          "location": "6",
+          "location": [6,2,4],
           "reference_id": "",
           "regulation": "3",
           "control_number": "",
-          "assets": "credit card data, google-public-dns-a.google.com, ",
+          "affected_assets": "Asset Name 1,Asset Name 2,[Asset Group Name 1],Asset Name 3,[Asset Group Name 2]",
           "technology": "8",
-          "team": "3",
+          "team": [3],
+          "additional_stakeholders": [1,17,16,15],
           "owner": "16",
           "manager": "15",
           "source": "4",
@@ -129,7 +122,17 @@
           "OWASPPrivacyViolation": "10",
           "Custom": "",
           "assessment": "Assessment",
-          "notes": "Additional notes"
+          "notes": "Additional notes",
+          "tags": [Tag1,Tag2,Tag3],
+          "custom_field": {
+              "21":"Custom first",
+              "41":"Custom value"
+          },
+          "ContributingLikelihood": "2",
+          "ContributingImpacts": {
+              "5": "2",
+              "7": "3"
+          }
         }';
         $results['response'] = '{
               "status": 200,
@@ -154,11 +157,15 @@
           "mitigation_effort": "2",
           "mitigation_cost": "2",
           "mitigation_owner": "17",
-          "mitigation_team": "2",
+          "mitigation_team": "2,3",
           "current_solution": "Current solution",
           "security_requirements": "Requirements",
           "security_recommendations": "Recommends",
-          "mitigation_percent": "33"
+          "mitigation_percent": "33",
+          "custom_field": {
+              "21": "Custom first",
+              "41": "Custom value"
+          }
         }';
         
         $results['response'] = '{
@@ -183,7 +190,10 @@
           "next_step": "1",
           "comments": "This is a comment",
           "custom_date": "no",
-          "next_review": "06/11/2017"
+          "next_review": "06/11/2017",
+          "custom_field": {
+            "43": "3"
+          }
         }';
         
         $results['response'] = '{
@@ -236,11 +246,11 @@
         $results['response'] = '{
             "status": 200,
             "status_message": "scoring_history",
-            "data": {
+            "data": [{
                 "risk_id": "1001",
-		"calculated_risk": "10",
-		"last_update": "2017-03-05 17:55:57"
-            }
+		            "calculated_risk": "10",
+		            "last_update": "2017-03-05 17:55:57"
+            }]
         }';
 
         return;
@@ -253,73 +263,106 @@
         $results['params'] = '';
         
         $results['response'] = '{
-          "status": 200,
-          "status_message": "viewrisk",
-          "data": [
-            {
-              "id": 2281,
-              "status": "Untreated",
-              "subject": "",
-              "reference_id": "01",
-              "regulation": "Sarbanes-Oxley (SOX)",
-              "control_number": "007",
-              "location": "Austin, TX",
-              "source": "People",
-              "category": "Technical Vulnerability Management",
-              "team": "Information Security",
-              "technology": "Windows",
-              "owner": "Admin",
-              "manager": "Demo Director",
-              "assessment": "",
-              "notes": "",
-              "assets": "host002",
-              "submission_date": "2016-04-28 20:25:26",
-              "mitigation_id": "0",
-              "mgmt_review": "0",
-              "calculated_risk": "10",
-              "next_review": null,
-              "color": "#ff0000",
-              "scoring_method": "Custom",
-              "CLASSIC_likelihood": "Almost Certain",
-              "CLASSIC_impact": "Extreme/Catastrophic",
-              "CVSS_AccessVector": "N",
-              "CVSS_AccessComplexity": "L",
-              "CVSS_Authentication": "N",
-              "CVSS_ConfImpact": "C",
-              "CVSS_IntegImpact": "C",
-              "CVSS_AvailImpact": "C",
-              "CVSS_Exploitability": "ND",
-              "CVSS_RemediationLevel": "ND",
-              "CVSS_ReportConfidence": "ND",
-              "CVSS_CollateralDamagePotential": "ND",
-              "CVSS_TargetDistribution": "ND",
-              "CVSS_ConfidentialityRequirement": "ND",
-              "CVSS_IntegrityRequirement": "ND",
-              "CVSS_AvailabilityRequirement": "ND",
-              "DREAD_DamagePotential": "10",
-              "DREAD_Reproducibility": "10",
-              "DREAD_Exploitability": "10",
-              "DREAD_AffectedUsers": "10",
-              "DREAD_Discoverability": "10",
-              "OWASP_SkillLevel": "10",
-              "OWASP_Motive": "10",
-              "OWASP_Opportunity": "10",
-              "OWASP_Size": "10",
-              "OWASP_EaseOfDiscovery": "10",
-              "OWASP_EaseOfExploit": "10",
-              "OWASP_Awareness": "10",
-              "OWASP_IntrusionDetection": "10",
-              "OWASP_LossOfConfidentiality": "10",
-              "OWASP_LossOfIntegrity": "10",
-              "OWASP_LossOfAvailability": "10",
-              "OWASP_LossOfAccountability": "10",
-              "OWASP_FinancialDamage": "10",
-              "OWASP_ReputationDamage": "10",
-              "OWASP_NonCompliance": "10",
-              "OWASP_PrivacyViolation": "10",
-              "Custom": "10"
-            }
-          ]
+            "status": 200,
+            "status_message": "viewrisk",
+            "data": [
+                {
+                    "id": 1031,
+                    "status": "New",
+                    "subject": "test",
+                    "reference_id": "",
+                    "regulation": "",
+                    "control_number": "",
+                    "location": "Austin, TX; Chicago, IL; Los Angeles, CA",
+                    "source": "",
+                    "category": "",
+                    "team": "Branch Management",
+                    "technology": "",
+                    "owner": "",
+                    "manager": "",
+                    "assessment": "",
+                    "notes": "",
+                    "affected_assets": [
+                        {
+                            "name": "Asset Group 1",
+                            "type": "group"
+                        },
+                        {
+                            "name": "Asset Group 2",
+                            "type": "group"
+                        },
+                        {
+                            "name": "Asset 1",
+                            "type": "asset"
+                        },
+                        {
+                            "name": "Asset 2",
+                            "type": "asset"
+                        }
+                    ],
+                    "submission_date": "2018-06-06 11:01:20",
+                    "mitigation_id": "0",
+                    "mgmt_review": "0",
+                    "calculated_risk": "10",
+                    "next_review": null,
+                    "color": "#ff0505",
+                    "scoring_method": "Custom",
+                    "CLASSIC_likelihood": "Almost Certain",
+                    "CLASSIC_impact": "Extreme/Catastrophic",
+                    "CVSS_AccessVector": "N",
+                    "CVSS_AccessComplexity": "L",
+                    "CVSS_Authentication": "N",
+                    "CVSS_ConfImpact": "C",
+                    "CVSS_IntegImpact": "C",
+                    "CVSS_AvailImpact": "C",
+                    "CVSS_Exploitability": "ND",
+                    "CVSS_RemediationLevel": "ND",
+                    "CVSS_ReportConfidence": "ND",
+                    "CVSS_CollateralDamagePotential": "ND",
+                    "CVSS_TargetDistribution": "ND",
+                    "CVSS_ConfidentialityRequirement": "ND",
+                    "CVSS_IntegrityRequirement": "ND",
+                    "CVSS_AvailabilityRequirement": "ND",
+                    "DREAD_DamagePotential": "10",
+                    "DREAD_Reproducibility": "10",
+                    "DREAD_Exploitability": "10",
+                    "DREAD_AffectedUsers": "10",
+                    "DREAD_Discoverability": "10",
+                    "OWASP_SkillLevel": "10",
+                    "OWASP_Motive": "10",
+                    "OWASP_Opportunity": "10",
+                    "OWASP_Size": "10",
+                    "OWASP_EaseOfDiscovery": "10",
+                    "OWASP_EaseOfExploit": "10",
+                    "OWASP_Awareness": "10",
+                    "OWASP_IntrusionDetection": "10",
+                    "OWASP_LossOfConfidentiality": "10",
+                    "OWASP_LossOfIntegrity": "10",
+                    "OWASP_LossOfAvailability": "10",
+                    "OWASP_LossOfAccountability": "10",
+                    "OWASP_FinancialDamage": "10",
+                    "OWASP_ReputationDamage": "10",
+                    "OWASP_NonCompliance": "10",
+                    "OWASP_PrivacyViolation": "10",
+                    "tags": "Tag1,Tag2,Tag3",
+                    "Custom": "10",
+                    "ContributingLikelihood": "2",
+                    "ContributingImpacts": {
+                        "5": "2",
+                        "7": "3"
+                    },
+                    "closure_date": "2015-09-15 06:26:47",
+                    "custom_values": [
+                        {
+                            "field_id": "41",
+                            "value": "1",
+                            "review_id": "0",
+                            "field_name": "test",
+                            "field_type": "longtext"
+                        }
+                    ]
+                }
+            ]
         }';
         
         return;
@@ -346,8 +389,8 @@
             "mitigation_max_cost": "200000",
             "mitigation_owner": "17",
             "mitigation_owner_name": "Demo Director",
-            "mitigation_team": "6",
-            "mitigation_team_name": "IT Systems Management",
+            "mitigation_team": "2,3",
+            "mitigation_team_name": "IT Systems Management, Collaboration",
             "current_solution": "Current solution",
             "security_requirements": "System requirements",
             "security_recommendations": "Security recommendations",
@@ -356,6 +399,24 @@
             "supporting_files": [
               "http://demo.simplerisk.com/management/download.php?id=w7rtvQ1nmtOsPf0pGLSby5pqQ9ouAZ",
               "http://demo.simplerisk.com/management/download.php?id=IcyuIqRRoaG3ukaSk8IuVwc1HUGrgn"
+            ],
+            "custom_values": [
+                {
+                    "field_id": "21",
+                    "value": "Custom first",
+                    "review_id": "0",
+                    "field_name": "PlanningStrategy",
+                    "field_type": "",
+                    "tab_index": "2"
+                },
+                {
+                    "field_id": "41",
+                    "value": "Custom value",
+                    "review_id": "0",
+                    "field_name": "test",
+                    "field_type": "longtext",
+                    "tab_index": "2"
+                }
             ]
           }
         }';
@@ -378,7 +439,17 @@
             "review": "1",
             "next_step": "1",
             "next_review": "2017-06-30",
-            "comments": "This is a comment."
+            "comments": "This is a comment.",
+            "custom_values": [
+                {
+                    "field_id": "43",
+                    "value": "3",
+                    "review_id": "30",
+                    "field_name": "Review_test",
+                    "field_type": "dropdown",
+                    "tab_index": "3"
+                }
+            ]
           }
         }';
         
@@ -431,11 +502,11 @@
           "id": "2287",
           "subject": "blabla",
           "category": "1",
-          "location": "6",
+          "location": [6,1,4],
           "reference_id": "",
           "regulation": "3",
           "control_number": "",
-          "assets": "credit card data, google-public-dns-a.google.com, ",
+          "affected_assets": "Asset Name 1,Asset Name 2,[Asset Group Name 1],Asset Name 3,[Asset Group Name 2]",
           "technology": "8",
           "team": "3",
           "additional_stakeholders": "1,17,16,15",
@@ -482,7 +553,17 @@
           "OWASPPrivacyViolation": "10",
           "Custom": "",
           "assessment": "Assessment",
-          "notes": "Additional notes"
+          "notes": "Additional notes",
+          "tags": [Tag1, Tag2, Tag3],
+          "custom_field": {
+              "21":"Custom first",
+              "41":"Custom value"
+          },
+          "ContributingLikelihood": "2",
+          "ContributingImpacts": {
+              "5": "2",
+              "7": "3"
+          }
         }';
 
         $results['response'] = '{
@@ -493,12 +574,39 @@
         
         return;
     }
+
+    function mock_get_audit_logs(&$results){
+        $results = array();
+        $results['url'] = "/api/audit_logs?key={key}&days=7&log_type=risk, contact";
+        $results['method'] = "GET";
+        $results['params'] = '';
+
+        $results['response'] = '{
+          "status": 200,
+          "status_message": "Success",
+          "data":  [
+            {
+              "timestamp": "29/03/2019 2:26 AM CET",
+              "username": "Admin",
+              "message": "A management review was submitted for risk ID \"1088\" by username \"admin\"."
+            },
+            {
+              "timestamp": "29/03/2019 2:26 AM CET",
+              "username": "Admin",
+              "message": "Risk(ID:1088) was assigned to project \"test project\" by user \"admin\"."
+            }
+          ]
+        }';
+        
+        return;
+    }
 ?>
 
 <!doctype html>
 <html>
 
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
   <script src="../js/bootstrap.min.js"></script>
   <title>SimpleRisk: Enterprise Risk Management Simplified</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">

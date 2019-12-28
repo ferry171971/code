@@ -15,27 +15,19 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-  // Add the Content-Security-Policy header
-  header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-    session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
     session_name('SimpleRisk');
     session_start();
 }
@@ -54,20 +46,18 @@ if (assessments_extra())
     // Include the assessments extra
     require_once(realpath(__DIR__ . '/../extras/assessments/index.php'));
 
+    if(isset($_GET['action']) && $_GET['action']=="get_sub_questions_by_answer")
+    {
+        getAssessmentQuestionnaireQuestionsByAnswer();
+        exit;
+    }
+
     // If a token was sent
     if (isset($_GET['token']))
     {
         // If the token is valid
         if (is_valid_questionnaire_token($_GET['token']))
         {
-            // Check encrypted_pass is valid
-            if(!check_valid_encrypted_pass_in_contact())
-            {
-                logout_contact();
-                // If encrypted_pass is empty, logout contact
-                header("Location:".$_SESSION['base_url']."/assessments/questionnaire.index.php?token=".$_GET['token']);
-            }
-
             // Process action
             if(process_questionnaire_index()){
                 refresh();
@@ -101,15 +91,18 @@ else
     header("Location: ../index.php");
     exit(0);
 }
+
 ?>
 <!doctype html>
 <html>
 
 <head>
+  <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
   <script src="../js/jquery.min.js"></script>
   <script src="../js/jquery-ui.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
   <script src="../js/common.js"></script>
+  <script src="../js/pages/assessment.js"></script>
   <title>SimpleRisk: Enterprise Risk Management Simplified</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
@@ -125,13 +118,18 @@ else
 
   <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/selectize.bootstrap3.css">
+  <script src="../js/selectize.min.js"></script>
+  <?php
+      setup_alert_requirements("..");
+  ?>  
 </head>
 
 <body>
     <div class="navbar">
         <div class="navbar-inner">
             <div class="container">
-                <a class="brand" href="http://www.simplerisk.org/"><img src='../images/logo@2x.png' alt='SimpleRisk' /></a>
+                <a class="brand" href="http://www.simplerisk.com/"><img src='../images/logo@2x.png' alt='SimpleRisk' /></a>
             </div>
         </div>
     </div>
@@ -142,7 +140,7 @@ else
     ?>
     <div class="container">
         <div class="row-fluid">
-            <div class="span12 questionnaire-response">
+            <div class="span12 questionnaire-response questionnaire-result-container">
                 <?php if ($display) display_questionnaire_index(); ?>
             </div>
         </div>
@@ -158,6 +156,7 @@ else
             });
         });
     </script>
+    <?php display_set_default_date_format_script(); ?>
 </body>
 
 </html>

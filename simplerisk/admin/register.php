@@ -14,27 +14,19 @@
     $escaper = new Zend\Escaper\Escaper('utf-8');
 
     // Add various security headers
-    header("X-Frame-Options: DENY");
-    header("X-XSS-Protection: 1; mode=block");
-
-    // If we want to enable the Content Security Policy (CSP) - This may break Chrome
-    if (csp_enabled())
-    {
-            // Add the Content-Security-Policy header
-	header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-    }
-
-    // Session handler is database
-    if (USE_DATABASE_FOR_SESSIONS == "true")
-    {
-		session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-    }
-
-    // Start the session
-	session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+    add_security_headers();
 
     if (!isset($_SESSION))
     {
+        // Session handler is database
+        if (USE_DATABASE_FOR_SESSIONS == "true")
+        {
+            session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+        }
+
+        // Start the session
+        session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
         session_name('SimpleRisk');
         session_start();
     }
@@ -42,7 +34,7 @@
     // Include the language file
     require_once(language_file());
 
-    require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
+//    require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
 
     // Check for session timeout or renegotiation
     session_check();
@@ -61,7 +53,9 @@
         header("Location: ../index.php");
         exit(0);
     }
-    
+    // Include the CSRF-magic library
+    // Make sure it's called after the session is properly setup
+    include_csrf_magic();
     
     if(isset($_POST['submit_mysqlpath'])){
         update_setting('mysqldump_path', $_POST['mysqldump_path']);
@@ -106,14 +100,16 @@
 		if (isset($_POST['register']))
 		{
 			// Get the posted values
-			$name = $_POST['name'];
+			$name = (isset($_POST['name']) ? $_POST['name'] : "");
+			$fname = (isset($_POST['fname']) ? $_POST['fname'] : "");
+			$lname = (isset($_POST['lname']) ? $_POST['lname'] : "");
 			$company = $_POST['company'];
 			$title = $_POST['title'];
 			$phone = $_POST['phone'];
 			$email = $_POST['email'];
 
 			// Add the registration
-			$result = add_registration($name, $company, $title, $phone, $email);
+			$result = add_registration($name, $company, $title, $phone, $email, $fname, $lname);
 
 			// If the registration failed
 			if ($result == 0)
@@ -140,73 +136,77 @@
 		// If the user has updated their registration information
 		if (isset($_POST['register']))
 		{
-            // Get the posted values
-            $name = $_POST['name'];
-            $company = $_POST['company'];
-            $title = $_POST['title'];
-            $phone = $_POST['phone'];
-            $email = $_POST['email'];
+			// Get the posted values
+			$name = (isset($_POST['name']) ? $_POST['name'] : "");
+			$fname = (isset($_POST['fname']) ? $_POST['fname'] : "");
+			$lname = (isset($_POST['lname']) ? $_POST['lname'] : "");
+			$company = $_POST['company'];
+			$title = $_POST['title'];
+			$phone = $_POST['phone'];
+			$email = $_POST['email'];
 
 			// Update the registration
-			$result = update_registration($name, $company, $title, $phone, $email);
+			$result = update_registration($name, $company, $title, $phone, $email, $fname, $lname);
 
-            // If the registration failed
-            if ($result == 0)
-            {
-	            // Display an alert
-	            set_alert(true, "bad", "There was a problem updating your SimpleRisk instance.");
-            }
-            else
-            {
-	            // Display an alert
-	            set_alert(true, "good", "SimpleRisk instance updated successfully.");
-            }
+			// If the registration failed
+			if ($result == 0)
+			{
+				// Display an alert
+				set_alert(true, "bad", "There was a problem updating your SimpleRisk instance.");
+			}
+			else
+			{
+				// Display an alert
+				set_alert(true, "good", "SimpleRisk instance updated successfully.");
+			}
 		}
 		// Otherwise get the registration values from the database
 		else
 		{
-        	$name = get_setting("registration_name");
-	        $company = get_setting("registration_company");
-        	$title = get_setting("registration_title");
-        	$phone = get_setting("registration_phone");
-        	$email = get_setting("registration_email");
+			$name = get_setting("registration_name");
+			$fname = get_setting("registration_fname");
+			$lname = get_setting("registration_lname");
+			$company = get_setting("registration_company");
+			$title = get_setting("registration_title");
+			$phone = get_setting("registration_phone");
+			$email = get_setting("registration_email");
 		}
 
 		// If the user wants to install the Upgrade Extra
 		if (isset($_POST['get_upgrade_extra']))
 		{
-	        // Download the extra
-        	$result = download_extra("upgrade");
+            // Download the extra
+            $result = download_extra("upgrade");
 		}
 		// If the user wants to install the Authentication Extra
 		else if (isset($_POST['get_authentication_extra']))
 		{
-            // Download the extra
-            $result = download_extra("authentication");
+			// Download the extra
+			$result = download_extra("authentication");
 		}
 		// If the user wants to install the Encryption Extra
 		else if (isset($_POST['get_encryption_extra']))
 		{
-	        // Download the extra
-        	$result = download_extra("encryption");
+            // Download the extra
+            $result = download_extra("encryption");
 		}
 		// If the user wants to install the Import-Export Extra
 		else if (isset($_POST['get_importexport_extra']))
 		{
-	        // Download the extra
-        	$result = download_extra("import-export");
+            // Download the extra
+            $result = download_extra("import-export");
 		}
 		// If the user wants to install the Notification Extra
 		else if (isset($_POST['get_notification_extra']))
 		{
-	        // Download the extra
-        	$result = download_extra("notification");
+            // Download the extra
+            $result = download_extra("notification");
 		}
 		// If the user wants to install the Separation Extra
 		else if (isset($_POST['get_separation_extra']))
 		{
-	        // Download the extra
-        	$result = download_extra("separation");
+            // Download the extra
+            $result = download_extra("separation");
 		}
 		else if (isset($_POST['get_governance_extra']))
 		{
@@ -225,6 +225,36 @@
             // Download the extra
             $result = download_extra("api");
         }
+        // If the user wants to install the ComplianceForge Extra
+        else if (isset($_POST['get_complianceforge_extra']))
+        {
+            // Download the extra
+            $result = download_extra("complianceforge");
+        }
+        // If the user wants to install the ComplianceForge SCF Extra
+        else if (isset($_POST['get_complianceforge_scf_extra']))
+        {
+            // Download the extra
+            $result = download_extra("complianceforgescf");
+        }
+        // If the user wants to install the Customization Extra
+        else if (isset($_POST['get_customization_extra']))
+        {
+            // Download the extra
+            $result = download_extra("customization");
+        }
+        // If the user wants to install the Advanced Search Extra
+        else if (isset($_POST['get_advanced_search_extra']))
+        {
+            // Download the extra
+            $result = download_extra("advanced_search");
+        }
+        // If the user wants to install the Jira Extra
+        else if (isset($_POST['get_jira_extra']))
+        {
+            // Download the extra
+            $result = download_extra("jira");
+        }
 	}
 ?>
 
@@ -232,6 +262,7 @@
 <html>
 
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>
@@ -247,6 +278,47 @@
 
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+    
+    <?php
+        setup_alert_requirements("..");
+    ?>
+    
+    <style>
+    
+        .progress-wrapper {
+            background-color: #3a3a3a;
+            border-radius: 2px;
+            box-shadow: none;
+            border: none;
+            padding: 5px 0px;
+            margin-top: 5px;
+        }
+        .progress-window {
+            height: 220px;
+            max-height: 220px;
+            padding: 15px;
+            overflow-y: auto;
+            color: white;
+        }
+        
+        .progress-window .error_message{
+            color: orangered;
+        }
+        
+        .progress-window::-webkit-scrollbar {
+            background: yellow;
+            width: 10px;
+        }
+        .progress-window::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .progress-window::-webkit-scrollbar-thumb {
+            background: #888;
+        }
+        .progress-window::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
   </head>
 
   <body>
@@ -297,7 +369,7 @@
                                     <tbody>
                                         <tr>
                                             <td width="140px">Mysqldump Path: &nbsp;</td>
-                                            <td><input  name="mysqldump_path" value="<?php echo get_settting_by_name('mysqldump_path') ?>" type="text"></td>
+                                            <td><input  name="mysqldump_path" value="<?php echo $escaper->escapeHtml(get_setting('mysqldump_path')); ?>" type="text"></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -309,7 +381,7 @@
             <?php } ?>
             
             <div class="row-fluid">
-                <div class="span6">
+                <div id="register-panel" class="span6">
                   <div class="hero-unit">
                     <p><h4><?php echo $escaper->escapeHtml($lang['RegistrationInformation']); ?></h4></p>
                     <form name="register" method="post" action="">
@@ -327,19 +399,19 @@
 				                if (isset($_POST['update']))
 				                {
 					                // Display the editable registration table
-					                display_registration_table_edit($name, $company, $title, $phone, $email);
+					                display_registration_table_edit($name, $company, $title, $phone, $email, $fname, $lname);
 				                }
 				                else
 				                {
 					                // Display the registration table
-					                display_registration_table($name, $company, $title, $phone, $email);
+					                display_registration_table($name, $company, $title, $phone, $email, $fname, $lname);
 				                }
 			                }
 		                ?>
                     </form>
                   </div>
                 </div>
-                <div class="span6">
+                <div id="upgrade-panel" class="span6">
                     <div class="hero-unit">
                         <p><h4><?php echo $escaper->escapeHtml($lang['UpgradeSimpleRisk']); ?></h4></p>
                         <?php
@@ -378,6 +450,72 @@
         </div>
       </div>
     </div>
+        <script type="text/javascript">
+            var last_response_len = false;
+            var $progress = $('.progress-window');
+            $('#app_upgrade').click(function() {
+                $progress.html("");
+                $('.progress-wrapper').show();
+                $('#upgrade-panel .hero-unit').height($('#register-panel .hero-unit').height());
+                
+                $.ajax(BASE_URL + '/api/one_click_upgrade', {
+                    method: "POST",
+                    data: {data: 1},
+                    xhrFields: {
+                        onprogress: function(e)
+                        {
+                            var this_response, response = e.currentTarget.response;
+                            if(response.indexOf("__csrf_magic") > -1){
+                                return;
+                            }
+                            
+                            if(last_response_len === false)
+                            {
+                                this_response = response;
+                                last_response_len = response.length;
+                            }
+                            
+                            else
+                            {
+                                this_response = response.substring(last_response_len);
+                                last_response_len = response.length;
+                            }
+                            $progress.append("<div style=''>" + this_response + "</div>");
+                            $progress.animate({ scrollTop: 9999 });
+                        }
+                    },
+                    error: function(xhr,status,error){
+                        if(!retryCSRF(xhr, this))
+                        {
+                            if(xhr.responseJSON && xhr.responseJSON.status_message){
+                                showAlertsFromArray(xhr.responseJSON.status_message);
+                            }
+                        }
+                        
+                    }
+                })
+                .done(function(data)
+                {
+                    /*$progress.append("<div style='color: limegreen'><?php echo $lang['UpdateSuccessful'] ?></div>");
+                    $progress.animate({ scrollTop: 9999 });*/
+                })
+                .fail(function(xhr, status, errorMessage)
+                {
+                    if(retryCSRFCount > 5){
+                        $progress.append("<div style='color: orangered'><?php echo $lang['UpdateFailed'] ?></div>");
+                        $progress.append("<div style='color: orangered'>" + status +  "(" + errorMessage + ")</div>");
+                        $progress.animate({ scrollTop: 9999 });
+                    }
+                    
+                });
+
+            });
+
+            $(document).ready(function(){
+                
+            });
+
+        </script>   
   </body>
 
 </html>

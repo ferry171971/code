@@ -15,27 +15,19 @@ require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'
 $escaper = new Zend\Escaper\Escaper('utf-8');
 
 // Add various security headers
-header("X-Frame-Options: DENY");
-header("X-XSS-Protection: 1; mode=block");
-
-// If we want to enable the Content Security Policy (CSP) - This may break Chrome
-if (csp_enabled())
-{
-    // Add the Content-Security-Policy header
-    header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-}
-
-// Session handler is database
-if (USE_DATABASE_FOR_SESSIONS == "true")
-{
-    session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
-}
-
-// Start the session
-session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+add_security_headers();
 
 if (!isset($_SESSION))
 {
+    // Session handler is database
+    if (USE_DATABASE_FOR_SESSIONS == "true")
+    {
+        session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+    }
+
+    // Start the session
+    session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+
     session_name('SimpleRisk');
     session_start();
 }
@@ -71,8 +63,11 @@ if (isset($_POST['add_user']))
     $email = $_POST['email'];
     $user = $_POST['new_user'];
     $pass = $_POST['password'];
+    $manager = (int)$_POST['manager'];
+
     $repeat_pass = $_POST['repeat_password'];
     $teams = isset($_POST['team']) ? $_POST['team'] : array('none');
+    $role_id = (int)$_POST['role'];
     $admin = isset($_POST['admin']) ? '1' : '0';
     $governance = isset($_POST['governance']) ? '1' : '0';
     $riskmanagement = isset($_POST['riskmanagement']) ? '1' : '0';
@@ -84,12 +79,31 @@ if (isset($_POST['add_user']))
     $close_risks = isset($_POST['close_risks']) ? '1' : '0';
     $plan_mitigations = isset($_POST['plan_mitigations']) ? '1' : '0';
     $review_veryhigh = isset($_POST['review_veryhigh']) ? '1' : '0';
+    $accept_mitigation = isset($_POST['accept_mitigation']) ? '1' : '0';
     $review_high = isset($_POST['review_high']) ? '1' : '0';
     $review_medium = isset($_POST['review_medium']) ? '1' : '0';
     $review_low = isset($_POST['review_low']) ? '1' : '0';
     $review_insignificant = isset($_POST['review_insignificant']) ? '1' : '0';
     $multi_factor = (int)$_POST['multi_factor'];
     $change_password = (int)(isset($_POST['change_password']) ? $_POST['change_password'] : 0);
+    
+    $add_new_frameworks = (int)(isset($_POST['add_new_frameworks']) ? 1 : 0);
+    $modify_frameworks = (int)(isset($_POST['modify_frameworks']) ? 1 : 0);
+    $delete_frameworks = (int)(isset($_POST['delete_frameworks']) ? 1 : 0);
+    $add_new_controls = (int)(isset($_POST['add_new_controls']) ? 1 : 0);
+    $modify_controls = (int)(isset($_POST['modify_controls']) ? 1 : 0);
+    $delete_controls = (int)(isset($_POST['delete_controls']) ? 1 : 0);
+    $add_documentation = (int)(isset($_POST['add_documentation']) ? 1 : 0);
+    $modify_documentation = (int)(isset($_POST['modify_documentation']) ? 1 : 0);
+    $delete_documentation = (int)(isset($_POST['delete_documentation']) ? 1 : 0);
+    $comment_risk_management = (int)(isset($_POST['comment_risk_management']) ? 1 : 0);
+    $comment_compliance = (int)(isset($_POST['comment_compliance']) ? 1 : 0);
+    
+    $view_exception           = isset($_POST['view_exception']) ? 1 : 0;
+    $create_exception         = isset($_POST['create_exception']) ? 1 : 0;
+    $update_exception         = isset($_POST['update_exception']) ? 1 : 0;
+    $delete_exception         = isset($_POST['delete_exception']) ? 1 : 0;
+    $approve_exception        = isset($_POST['approve_exception']) ? 1 : 0;
 
     // If the type is 1
     if ($type == "1")
@@ -176,20 +190,38 @@ if (isset($_POST['add_user']))
 
                 // If none was selected then assign no teams
                 if ($none) $team = "none";
+                
+                $other_options = [
+                    "add_documentation" => $add_documentation,
+                    "modify_documentation" => $modify_documentation,
+                    "delete_documentation" => $delete_documentation,
+                    "comment_risk_management" => $comment_risk_management,
+                    "comment_compliance" => $comment_compliance,
+                    "view_exception" => $view_exception,
+                    "create_exception" => $create_exception,
+                    "update_exception" => $update_exception,
+                    "delete_exception" => $delete_exception,
+                    "approve_exception" => $approve_exception,
+                    "manager" => $manager,
+                ];
 
                 // Insert a new user
-                add_user($type, $user, $email, $name, $salt, $hash, $team, $governance, $riskmanagement, $compliance, $assessments, $asset, $admin, $review_veryhigh, $review_high, $review_medium, $review_low, $review_insignificant, $submit_risks, $modify_risks, $plan_mitigations, $close_risks, $multi_factor, $change_password);
+                add_user($type, $user, $email, $name, $salt, $hash, $team, $role_id, $governance, $riskmanagement, $compliance, $assessments, $asset, $admin, $review_veryhigh, $accept_mitigation, $review_high, $review_medium, $review_low, $review_insignificant, $submit_risks, $modify_risks, $plan_mitigations, $close_risks, $multi_factor, $change_password, $add_new_frameworks, $modify_frameworks, $delete_frameworks, $add_new_controls, $modify_controls, $delete_controls, $other_options);
 
-                // If the encryption extra is enabled
+		// If the encryption extra is enabled
                 if (encryption_extra())
                 {
                     // Load the extra
                     require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
 
-                    // Add the new encrypted user
-                    add_user_enc($pass, $salt, $user);
+                    // If the encryption method is mcrypt
+                    if (isset($_SESSION['encryption_method']) && $_SESSION['encryption_method'] == "mcrypt")
+                    {
+                        // Add the new encrypted user
+                        add_user_enc($pass, $salt, $user);
+                    }
                 }
-                
+
                 // Clear values
                 $name = "";
                 $email = "";
@@ -268,11 +300,15 @@ if (isset($_POST['delete_user']))
             // Load the extra
             require_once(realpath(__DIR__ . '/../extras/encryption/index.php'));
 
-            // Delete the value from the user_enc table
-            delete_user_enc($value);
+            // If the encryption method is mcrypt
+            if (isset($_SESSION['encryption_method']) && $_SESSION['encryption_method'] == "mcrypt")
+            {
+                // Delete the value from the user_enc table
+                delete_user_enc($value);
 
-            // Check to see if all users have now been activated
-            check_all_activated();
+                // Check to see if all users have now been activated
+                check_all_activated();
+            }
         }
 
         // Display an alert
@@ -325,6 +361,7 @@ if (isset($_POST['password_policy_update']))
 <html>
 
 <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
@@ -370,96 +407,181 @@ if (isset($_POST['password_policy_update']))
 
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+    
+    <?php
+        setup_alert_requirements("..");
+    ?>    
 </head>
 
 <body>
 <script type="text/javascript">
-function checkAll(bx) {
-    if(bx.checked){
-        $(bx).parents('table').find('input[type=checkbox]').prop('checked', true);
-    }else{
-        $(bx).parents('table').find('input[type=checkbox]').prop('checked', false);
+    $(document).ready(function(){
+        // role event
+        $("#role").change(function(){
+            setUserResponsibilitesByRole();
+        });
+        
+        if($("#role").val()){
+            setUserResponsibilitesByRole();
+        }
+    });
+    
+    function setUserResponsibilitesByRole(){
+        // If role is unselected, uncheck all responsibilities
+        if(!$("#role").val())
+        {
+            $(".checklist input[type=checkbox]").prop("checked", false);
+        }
+        // If administrator role is selected
+        else if($("#role").val() == 1)
+        {
+            // Set all user responsibilites
+            $(".checklist input[type=checkbox]").prop("checked", true);
+            
+            // Set all teams
+            $("#team").multiselect("selectAll", false);
+            $("#team").multiselect("refresh");
+        }
+        else
+        {
+            $.ajax({
+                type: "GET",
+                url: BASE_URL + "/api/role_responsibilities/get_responsibilities",
+                data: {
+                    role_id: $("#role").val()
+                },
+                success: function(data){
+                    // Uncheck all checkboxes
+                    $(".checklist input[type=checkbox]").prop("checked", false);
+                    
+                    // Check all for responsibilites
+                    var responsibility_names = data.data;
+                    for(var key in responsibility_names){
+                        $(".checklist input[name="+responsibility_names[key]+"]").prop("checked", true)
+                    }
+                },
+                error: function(xhr,status,error){
+                    if(xhr.responseJSON && xhr.responseJSON.status_message){
+                        showAlertsFromArray(xhr.responseJSON.status_message);
+                    }
+                }
+            })
+        }
     }
     
-//    var cbs = document.getElementsByTagName('input');
-//    for(var i=0; i < cbs.length; i++) {
-//        if (cbs[i].type == 'checkbox') {
-//            cbs[i].checked = bx.checked;
-//        }
-//    }
-}
+    function checkAll(bx) {
+        if(bx.checked){
+            $(bx).parents('table').find('input[type=checkbox]').prop('checked', true);
+        }else{
+            $(bx).parents('table').find('input[type=checkbox]').prop('checked', false);
+        }
+    }
 
-function checkAllGovernance(bx) {
-    if (document.getElementsByName("check_governance")[0].checked == true) {
-        document.getElementsByName("governance")[0].checked = true;
+    function checkAllGovernance(bx) {
+        if (document.getElementsByName("check_governance")[0].checked == true) {
+            document.getElementsByName("governance")[0].checked = true;
+            document.getElementsByName("add_new_frameworks")[0].checked = true;
+            document.getElementsByName("modify_frameworks")[0].checked = true;
+            document.getElementsByName("delete_frameworks")[0].checked = true;
+            document.getElementsByName("add_new_controls")[0].checked = true;
+            document.getElementsByName("modify_controls")[0].checked = true;
+            document.getElementsByName("delete_controls")[0].checked = true;
+            document.getElementsByName("add_documentation")[0].checked = true;
+            document.getElementsByName("modify_documentation")[0].checked = true;
+            document.getElementsByName("delete_documentation")[0].checked = true;
+            document.getElementsByName("view_exception")[0].checked = true;
+            document.getElementsByName("create_exception")[0].checked = true;
+            document.getElementsByName("update_exception")[0].checked = true;
+            document.getElementsByName("delete_exception")[0].checked = true;
+            document.getElementsByName("approve_exception")[0].checked = true;
+        }
+        else {
+            document.getElementsByName("governance")[0].checked = false;
+            document.getElementsByName("add_new_frameworks")[0].checked = false;
+            document.getElementsByName("modify_frameworks")[0].checked = false;
+            document.getElementsByName("delete_frameworks")[0].checked = false;
+            document.getElementsByName("add_new_controls")[0].checked = false;
+            document.getElementsByName("modify_controls")[0].checked = false;
+            document.getElementsByName("delete_controls")[0].checked = false;
+            document.getElementsByName("add_documentation")[0].checked = false;
+            document.getElementsByName("modify_documentation")[0].checked = false;
+            document.getElementsByName("delete_documentation")[0].checked = false;
+            document.getElementsByName("view_exception")[0].checked = false;
+            document.getElementsByName("create_exception")[0].checked = false;
+            document.getElementsByName("update_exception")[0].checked = false;
+            document.getElementsByName("delete_exception")[0].checked = false;
+            document.getElementsByName("approve_exception")[0].checked = false;
+        }
     }
-    else {
-        document.getElementsByName("governance")[0].checked = false;
-    }
-}
 
-function checkAllRiskMgmt(bx) {
-    if (document.getElementsByName("check_risk_mgmt")[0].checked == true) {
-        document.getElementsByName("riskmanagement")[0].checked = true;
-        document.getElementsByName("submit_risks")[0].checked = true;
-        document.getElementsByName("modify_risks")[0].checked = true;
-        document.getElementsByName("close_risks")[0].checked = true;
-        document.getElementsByName("plan_mitigations")[0].checked = true;
-        document.getElementsByName("review_insignificant")[0].checked = true;
-        document.getElementsByName("review_low")[0].checked = true;
-        document.getElementsByName("review_medium")[0].checked = true;
-        document.getElementsByName("review_high")[0].checked = true;
-        document.getElementsByName("review_veryhigh")[0].checked = true;
+    function checkAllRiskMgmt(bx) {
+        if (document.getElementsByName("check_risk_mgmt")[0].checked == true) {
+            document.getElementsByName("riskmanagement")[0].checked = true;
+            document.getElementsByName("submit_risks")[0].checked = true;
+            document.getElementsByName("modify_risks")[0].checked = true;
+            document.getElementsByName("close_risks")[0].checked = true;
+            document.getElementsByName("plan_mitigations")[0].checked = true;
+            document.getElementsByName("review_insignificant")[0].checked = true;
+            document.getElementsByName("review_low")[0].checked = true;
+            document.getElementsByName("review_medium")[0].checked = true;
+            document.getElementsByName("review_high")[0].checked = true;
+            document.getElementsByName("review_veryhigh")[0].checked = true;
+            document.getElementsByName("accept_mitigation")[0].checked = true;
+            document.getElementsByName("comment_risk_management")[0].checked = true;
+        }
+        else {
+            document.getElementsByName("riskmanagement")[0].checked = false;
+            document.getElementsByName("submit_risks")[0].checked = false;
+            document.getElementsByName("modify_risks")[0].checked = false;
+            document.getElementsByName("close_risks")[0].checked = false;
+            document.getElementsByName("plan_mitigations")[0].checked = false;
+            document.getElementsByName("review_insignificant")[0].checked = false;
+            document.getElementsByName("review_low")[0].checked = false;
+            document.getElementsByName("review_medium")[0].checked = false;
+            document.getElementsByName("review_high")[0].checked = false;
+            document.getElementsByName("review_veryhigh")[0].checked = false;
+            document.getElementsByName("accept_mitigation")[0].checked = false;
+            document.getElementsByName("comment_risk_management")[0].checked = false;
+        }
     }
-    else {
-        document.getElementsByName("riskmanagement")[0].checked = false;
-        document.getElementsByName("submit_risks")[0].checked = false;
-        document.getElementsByName("modify_risks")[0].checked = false;
-        document.getElementsByName("close_risks")[0].checked = false;
-        document.getElementsByName("plan_mitigations")[0].checked = false;
-        document.getElementsByName("review_insignificant")[0].checked = false;
-        document.getElementsByName("review_low")[0].checked = false;
-        document.getElementsByName("review_medium")[0].checked = false;
-        document.getElementsByName("review_high")[0].checked = false;
-        document.getElementsByName("review_veryhigh")[0].checked = false;
-    }
-}
 
-function checkAllCompliance(bx) {
-    if (document.getElementsByName("check_compliance")[0].checked == true) {
-        document.getElementsByName("compliance")[0].checked = true;
+    function checkAllCompliance(bx) {
+        if (document.getElementsByName("check_compliance")[0].checked == true) {
+            document.getElementsByName("compliance")[0].checked = true;
+            document.getElementsByName("comment_compliance")[0].checked = true;
+        }
+        else {
+            document.getElementsByName("compliance")[0].checked = false;
+            document.getElementsByName("comment_compliance")[0].checked = false;
+        }
     }
-    else {
-        document.getElementsByName("compliance")[0].checked = false;
-    }
-}
 
-function checkAllAssetMgmt(bx) {
-    if (document.getElementsByName("check_asset_mgmt")[0].checked == true) {
-        document.getElementsByName("asset")[0].checked = true;
+    function checkAllAssetMgmt(bx) {
+        if (document.getElementsByName("check_asset_mgmt")[0].checked == true) {
+            document.getElementsByName("asset")[0].checked = true;
+        }
+        else {
+            document.getElementsByName("asset")[0].checked = false;
+        }
     }
-    else {
-        document.getElementsByName("asset")[0].checked = false;
-    }
-}
 
-function checkAllAssessments(bx) {
-    if (document.getElementsByName("check_assessments")[0].checked == true) {
-        document.getElementsByName("assessments")[0].checked = true;
+    function checkAllAssessments(bx) {
+        if (document.getElementsByName("check_assessments")[0].checked == true) {
+            document.getElementsByName("assessments")[0].checked = true;
+        }
+        else {
+            document.getElementsByName("assessments")[0].checked = false;
+        }
     }
-    else {
-        document.getElementsByName("assessments")[0].checked = false;
-    }
-}
 
-function checkAllConfigure(bx) {
-    if (document.getElementsByName("check_configure")[0].checked == true) {
-        document.getElementsByName("admin")[0].checked = true;
+    function checkAllConfigure(bx) {
+        if (document.getElementsByName("check_configure")[0].checked == true) {
+            document.getElementsByName("admin")[0].checked = true;
+        }
+        else {
+            document.getElementsByName("admin")[0].checked = false;
+        }
     }
-    else {
-        document.getElementsByName("admin")[0].checked = false;
-    }
-}
 </script>
 
 <?php
@@ -499,93 +621,120 @@ function checkAllConfigure(bx) {
                                         </select>
                                     </td>
                                 </tr>
-                                <tr><td><?php echo $escaper->escapeHtml($lang['FullName']); ?>:&nbsp;</td><td><input name="name" type="text" maxlength="50" size="20" value="<?php echo isset($name) ? $name : "" ?>" /></td></tr>
-                                <tr><td><?php echo $escaper->escapeHtml($lang['EmailAddress']); ?>:&nbsp;</td><td><input name="email" type="text" maxlength="200" value="<?php echo isset($email) ? $email : "" ?>" size="20" /></td></tr>
-                                <tr><td><?php echo $escaper->escapeHtml($lang['Username']); ?>:&nbsp;</td><td><input name="new_user" type="text" maxlength="200" value="<?php echo isset($user) ? $user : "" ?>" size="20" /></td></tr>
+                                <tr><td><?php echo $escaper->escapeHtml($lang['FullName']); ?>:&nbsp;</td><td><input name="name" type="text" maxlength="50" size="20" value="<?php echo isset($name) ? $escaper->escapeHtml($name) : "" ?>" /></td></tr>
+                                <tr><td><?php echo $escaper->escapeHtml($lang['EmailAddress']); ?>:&nbsp;</td><td><input name="email" type="text" maxlength="200" value="<?php echo isset($email) ? $escaper->escapeHtml($email) : "" ?>" size="20" /></td></tr>
+                                <tr><td><?php echo $escaper->escapeHtml($lang['Username']); ?>:&nbsp;</td><td><input name="new_user" type="text" maxlength="200" value="<?php echo isset($user) ? $escaper->escapeHtml($user) : "" ?>" size="20" /></td></tr>
                                 <tr class="ldap_pass"><td><?php echo $escaper->escapeHtml($lang['Password']); ?>:&nbsp;</td><td><input name="password" type="password" maxlength="50" size="20" autocomplete="off" /></td></tr>
                                 <tr class="ldap_pass"><td><?php echo $escaper->escapeHtml($lang['RepeatPassword']); ?>:&nbsp;</td><td><input name="repeat_password" type="password" maxlength="50" size="20" autocomplete="off" /></td></tr>
                             </table>
                             <div>
                                 <input name="change_password" id="change_password" <?php if(isset($change_password) && $change_password == 1) echo "checked"; ?> class="hidden-checkbox" type="checkbox" value="1" />  <label for="change_password">  &nbsp;&nbsp;&nbsp; <?php echo $escaper->escapeHtml($lang['RequirePasswordChangeOnLogin']); ?> </label> 
                             </div>
+
+                            <h6>
+                                <u><?php echo $escaper->escapeHtml($lang['Manager']); ?></u>
+                            </h6>
+                            <?php create_dropdown("user", "", "manager"); ?>
+
                             <h6><u><?php echo $escaper->escapeHtml($lang['Teams']); ?></u></h6>
                             <?php create_multiple_dropdown("team"); ?>
+
+                            <h6><u><?php echo $escaper->escapeHtml($lang['Role']); ?></u></h6>
+                            <?php create_dropdown("role", get_setting('default_user_role')); ?>
+                            
                             <h6><u><?php echo $escaper->escapeHtml($lang['UserResponsibilities']); ?></u></h6>
                             <table border="0" cellspacing="0" cellpadding="0">
                                 <tr>
-                                <td>
+                                    <td>
 
-                                <ul class="checklist">
-                                  <li><input name="check_all" class="hidden-checkbox" id="check_all" type="checkbox" onclick="checkAll(this)" /> <label for="check_all"> <?php echo $escaper->escapeHtml($lang['CheckAll']); ?> </label> </li>
-                                  <li>
-                                    <ul>
-                                        <li><input class="hidden-checkbox" id="check_governance" name="check_governance" type="checkbox" onclick="checkAllGovernance(this)"> <label for="check_governance"><?php echo $escaper->escapeHtml($lang['CheckAllGovernance']); ?></label></li>
-                                        <li>
-                                            <ul>
-                                            <li><input class="hidden-checkbox" id="governance" name="governance" type="checkbox" /> <label for="governance"><?php echo $escaper->escapeHtml($lang['AllowAccessToGovernanceMenu']); ?></label></li>
-                                          </ul>
-                                        </li>
-                                    </ul>
-                                    <ul>
-                                        <li><input class="hidden-checkbox" id="check_risk_mgmt" name="check_risk_mgmt" type="checkbox" onclick="checkAllRiskMgmt(this)"> <label for="check_risk_mgmt"><?php echo $escaper->escapeHtml($lang['CheckAllRiskMgmt']); ?></label></li>
-                                        <li>
-                                            <ul>
-                                            <li><input class="hidden-checkbox" id="riskmanagement" name="riskmanagement" type="checkbox" /> <label for="riskmanagement"><?php echo $escaper->escapeHtml($lang['AllowAccessToRiskManagementMenu']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="submit_risks" name="submit_risks" type="checkbox" />   <label for="submit_risks"><?php echo $escaper->escapeHtml($lang['AbleToSubmitNewRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="modify_risks" name="modify_risks" type="checkbox" />   <label for="modify_risks"><?php echo $escaper->escapeHtml($lang['AbleToModifyExistingRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="close_risks" name="close_risks" type="checkbox" />    <label for="close_risks"><?php echo $escaper->escapeHtml($lang['AbleToCloseRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="plan_mitigations" name="plan_mitigations" type="checkbox" />  <label for="plan_mitigations"><?php echo $escaper->escapeHtml($lang['AbleToPlanMitigations']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="review_insignificant" name="review_insignificant" type="checkbox" />  <label for="review_insignificant"><?php echo $escaper->escapeHtml($lang['AbleToReviewInsignificantRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="review_low" name="review_low" type="checkbox" />  <label for="review_low"><?php echo $escaper->escapeHtml($lang['AbleToReviewLowRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="review_medium" name="review_medium" type="checkbox" />  <label for="review_medium"><?php echo $escaper->escapeHtml($lang['AbleToReviewMediumRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="review_high" name="review_high" type="checkbox" />  <label for="review_high"><?php echo $escaper->escapeHtml($lang['AbleToReviewHighRisks']); ?></label></li>
-                                            <li><input class="hidden-checkbox" id="review_veryhigh" name="review_veryhigh" type="checkbox" />  <label for="review_veryhigh"><?php echo $escaper->escapeHtml($lang['AbleToReviewVeryHighRisks']); ?></label></li>
-                                          </ul>
-                                        </li>
-                                    </ul>
-                                    <ul>
-                                        <li><input class="hidden-checkbox" id="check_compliance" name="check_compliance" type="checkbox" onclick="checkAllCompliance(this)"> <label for="check_compliance"><?php echo $escaper->escapeHtml($lang['CheckAllCompliance']); ?></label></li>
-                                        <li>
-                                            <ul>
-                                            <li><input class="hidden-checkbox" id="compliance" name="compliance" type="checkbox" /> <label for="compliance"><?php echo $escaper->escapeHtml($lang['AllowAccessToComplianceMenu']); ?></label></li>
-                                          </ul>
-                                        </li>
-                                    </ul>
-                                  </li>
-                                  <li>
+                                    <ul class="checklist">
+                                      <li><input name="check_all" class="hidden-checkbox" id="check_all" type="checkbox" onclick="checkAll(this)" /> <label for="check_all"> <?php echo $escaper->escapeHtml($lang['CheckAll']); ?> </label> </li>
+                                      <li>
                                         <ul>
-                                          <li><input class="hidden-checkbox" id="check_asset_mgmt" name="check_asset_mgmt" type="checkbox" onclick="checkAllAssetMgmt(this)" /> <label for="check_asset_mgmt"><?php echo $escaper->escapeHtml($lang['CheckAllAssetMgmt']); ?></label></li>
-                                          <li>
-                                              <ul>
-                                                <li><input class="hidden-checkbox" id="asset" name="asset" type="checkbox" /> <label for="asset"><?php echo $escaper->escapeHtml($lang['AllowAccessToAssetManagementMenu']); ?></label></li>
-                                              </ul>
-                                          </li>
+                                            <li><input class="hidden-checkbox" id="check_governance" name="check_governance" type="checkbox" onclick="checkAllGovernance(this)"> <label for="check_governance"><?php echo $escaper->escapeHtml($lang['CheckAllGovernance']); ?></label></li>
+                                            <li>
+                                                <ul>
+                                                    <li><input class="hidden-checkbox" id="governance" name="governance" type="checkbox" /> <label for="governance"><?php echo $escaper->escapeHtml($lang['AllowAccessToGovernanceMenu']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="add_new_frameworks" name="add_new_frameworks" type="checkbox" /> <label for="add_new_frameworks"><?php echo $escaper->escapeHtml($lang['AbleToAddNewFrameworks']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="modify_frameworks" name="modify_frameworks" type="checkbox" /> <label for="modify_frameworks"><?php echo $escaper->escapeHtml($lang['AbleToModifyExistingFrameworks']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="delete_frameworks" name="delete_frameworks" type="checkbox" /> <label for="delete_frameworks"><?php echo $escaper->escapeHtml($lang['AbleToDeleteExistingFrameworks']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="add_new_controls" name="add_new_controls" type="checkbox" /> <label for="add_new_controls"><?php echo $escaper->escapeHtml($lang['AbleToAddNewControls']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="modify_controls" name="modify_controls" type="checkbox" /> <label for="modify_controls"><?php echo $escaper->escapeHtml($lang['AbleToModifyExistingControls']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="delete_controls" name="delete_controls" type="checkbox" /> <label for="delete_controls"><?php echo $escaper->escapeHtml($lang['AbleToDeleteExistingControls']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="add_documentation" name="add_documentation" type="checkbox" /> <label for="add_documentation"><?php echo $escaper->escapeHtml($lang['AbleToAddDocumentation']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="modify_documentation" name="modify_documentation" type="checkbox" /> <label for="modify_documentation"><?php echo $escaper->escapeHtml($lang['AbleToModifyDocumentation']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="delete_documentation" name="delete_documentation" type="checkbox" /> <label for="delete_documentation"><?php echo $escaper->escapeHtml($lang['AbleToDeleteDocumentation']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="view_exception" name="view_exception" type="checkbox" /> <label for="view_exception"><?php echo $escaper->escapeHtml($lang['AbleToViewDocumentException']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="create_exception" name="create_exception" type="checkbox" /> <label for="create_exception"><?php echo $escaper->escapeHtml($lang['AbleToCreateDocumentException']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="update_exception" name="update_exception" type="checkbox" /> <label for="update_exception"><?php echo $escaper->escapeHtml($lang['AbleToUpdateDocumentException']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="delete_exception" name="delete_exception" type="checkbox" /> <label for="delete_exception"><?php echo $escaper->escapeHtml($lang['AbleToDeleteDocumentException']); ?></label></li>
+                                                    <li><input class="hidden-checkbox" id="approve_exception" name="approve_exception" type="checkbox" /> <label for="approve_exception"><?php echo $escaper->escapeHtml($lang['AbleToApproveDocumentException']); ?></label></li>
+                                                </ul>
+                                            </li>
                                         </ul>
-                                  </li>    
-                                  <li>
                                         <ul>
-                                          <li><input class="hidden-checkbox" id="check_assessments" name="check_assessments" type="checkbox" onclick="checkAllAssessments(this)" /> <label for="check_assessments"><?php echo $escaper->escapeHtml($lang['CheckAllAssessments']); ?></label></li>
-                                          <li>
-                                              <ul>
-                                                <li><input class="hidden-checkbox" id="assessments" name="assessments" type="checkbox" /> <label for="assessments"><?php echo $escaper->escapeHtml($lang['AllowAccessToAssessmentsMenu']); ?></label></li>
+                                            <li><input class="hidden-checkbox" id="check_risk_mgmt" name="check_risk_mgmt" type="checkbox" onclick="checkAllRiskMgmt(this)"> <label for="check_risk_mgmt"><?php echo $escaper->escapeHtml($lang['CheckAllRiskMgmt']); ?></label></li>
+                                            <li>
+                                                <ul>
+                                                <li><input class="hidden-checkbox" id="riskmanagement" name="riskmanagement" type="checkbox" /> <label for="riskmanagement"><?php echo $escaper->escapeHtml($lang['AllowAccessToRiskManagementMenu']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="submit_risks" name="submit_risks" type="checkbox" />   <label for="submit_risks"><?php echo $escaper->escapeHtml($lang['AbleToSubmitNewRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="modify_risks" name="modify_risks" type="checkbox" />   <label for="modify_risks"><?php echo $escaper->escapeHtml($lang['AbleToModifyExistingRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="close_risks" name="close_risks" type="checkbox" />    <label for="close_risks"><?php echo $escaper->escapeHtml($lang['AbleToCloseRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="plan_mitigations" name="plan_mitigations" type="checkbox" />  <label for="plan_mitigations"><?php echo $escaper->escapeHtml($lang['AbleToPlanMitigations']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="accept_mitigation" name="accept_mitigation" type="checkbox" />  <label for="accept_mitigation"><?php echo $escaper->escapeHtml($lang['AbleToAcceptMitigations']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="review_insignificant" name="review_insignificant" type="checkbox" />  <label for="review_insignificant"><?php echo $escaper->escapeHtml($lang['AbleToReviewInsignificantRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="review_low" name="review_low" type="checkbox" />  <label for="review_low"><?php echo $escaper->escapeHtml($lang['AbleToReviewLowRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="review_medium" name="review_medium" type="checkbox" />  <label for="review_medium"><?php echo $escaper->escapeHtml($lang['AbleToReviewMediumRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="review_high" name="review_high" type="checkbox" />  <label for="review_high"><?php echo $escaper->escapeHtml($lang['AbleToReviewHighRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="review_veryhigh" name="review_veryhigh" type="checkbox" />  <label for="review_veryhigh"><?php echo $escaper->escapeHtml($lang['AbleToReviewVeryHighRisks']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="comment_risk_management" name="comment_risk_management" type="checkbox" /> <label for="comment_risk_management"><?php echo $escaper->escapeHtml($lang['AbleToCommentRiskManagement']); ?></label></li>
                                               </ul>
-                                          </li>
+                                            </li>
                                         </ul>
-                                  </li>
-                                  <li>
                                         <ul>
-                                          <li><input class="hidden-checkbox" id="check_configure" name="check_configure" type="checkbox" onclick="checkAllConfigure(this)" /> <label for="check_configure"><?php echo $escaper->escapeHtml($lang['CheckAllConfigure']); ?></label></li>
-                                          <li>
-                                              <ul>
-                                                <li><input class="hidden-checkbox" id="admin" name="admin" type="checkbox" /> <label for="admin"><?php echo $escaper->escapeHtml($lang['AllowAccessToConfigureMenu']); ?></label></li>
+                                            <li><input class="hidden-checkbox" id="check_compliance" name="check_compliance" type="checkbox" onclick="checkAllCompliance(this)"> <label for="check_compliance"><?php echo $escaper->escapeHtml($lang['CheckAllCompliance']); ?></label></li>
+                                            <li>
+                                                <ul>
+                                                <li><input class="hidden-checkbox" id="compliance" name="compliance" type="checkbox" /> <label for="compliance"><?php echo $escaper->escapeHtml($lang['AllowAccessToComplianceMenu']); ?></label></li>
+                                                <li><input class="hidden-checkbox" id="comment_compliance" name="comment_compliance" type="checkbox" /> <label for="comment_compliance"><?php echo $escaper->escapeHtml($lang['AbleToCommentCompliance']); ?></label></li>
                                               </ul>
-                                          </li>
+                                            </li>
+                                        </ul>
+                                      </li>
+                                      <li>
+                                            <ul>
+                                              <li><input class="hidden-checkbox" id="check_asset_mgmt" name="check_asset_mgmt" type="checkbox" onclick="checkAllAssetMgmt(this)" /> <label for="check_asset_mgmt"><?php echo $escaper->escapeHtml($lang['CheckAllAssetMgmt']); ?></label></li>
+                                              <li>
+                                                  <ul>
+                                                    <li><input class="hidden-checkbox" id="asset" name="asset" type="checkbox" /> <label for="asset"><?php echo $escaper->escapeHtml($lang['AllowAccessToAssetManagementMenu']); ?></label></li>
+                                                  </ul>
+                                              </li>
+                                            </ul>
+                                      </li>    
+                                      <li>
+                                            <ul>
+                                              <li><input class="hidden-checkbox" id="check_assessments" name="check_assessments" type="checkbox" onclick="checkAllAssessments(this)" /> <label for="check_assessments"><?php echo $escaper->escapeHtml($lang['CheckAllAssessments']); ?></label></li>
+                                              <li>
+                                                  <ul>
+                                                    <li><input class="hidden-checkbox" id="assessments" name="assessments" type="checkbox" /> <label for="assessments"><?php echo $escaper->escapeHtml($lang['AllowAccessToAssessmentsMenu']); ?></label></li>
+                                                  </ul>
+                                              </li>
+                                            </ul>
+                                      </li>
+                                      <li>
+                                            <ul>
+                                              <li><input class="hidden-checkbox" id="check_configure" name="check_configure" type="checkbox" onclick="checkAllConfigure(this)" /> <label for="check_configure"><?php echo $escaper->escapeHtml($lang['CheckAllConfigure']); ?></label></li>
+                                              <li>
+                                                  <ul>
+                                                    <li><input class="hidden-checkbox" id="admin" name="admin" type="checkbox" /> <label for="admin"><?php echo $escaper->escapeHtml($lang['AllowAccessToConfigureMenu']); ?></label></li>
+                                                  </ul>
+                                              </li>
 
-                                        </ul>
-                                  </li>
-                                </ul>
+                                            </ul>
+                                      </li>
+                                    </ul>
 
-                                </td>
+                                    </td>
                                 </tr>
                             </table>
                             <h6><u><?php echo $escaper->escapeHtml($lang['MultiFactorAuthentication']); ?></u></h6>
@@ -608,7 +757,7 @@ function checkAllConfigure(bx) {
                         <form name="select_user" method="post" action="view_user_details.php">
                             <p>
                                 <h4><?php echo $escaper->escapeHtml($lang['ViewDetailsForUser']); ?>:</h4>
-                                <?php echo $escaper->escapeHtml($lang['DetailsForUser']); ?> <?php create_dropdown("user"); ?>&nbsp;&nbsp;<input type="submit" value="<?php echo $escaper->escapeHtml($lang['Select']); ?>" name="select_user" />
+                                <?php echo $escaper->escapeHtml($lang['DetailsForUser']); ?> <?php create_dropdown('enabled_users', null, 'user'); ?>&nbsp;&nbsp;<input type="submit" value="<?php echo $escaper->escapeHtml($lang['Select']); ?>" name="select_user" />
                             </p>
                         </form>
                     </div>
@@ -685,6 +834,7 @@ function checkAllConfigure(bx) {
         </div>
     </div>
 </div>
+<?php display_set_default_date_format_script(); ?>
 </body>
 
 </html>

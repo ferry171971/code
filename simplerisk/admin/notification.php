@@ -1,129 +1,127 @@
 <?php
-        /* This Source Code Form is subject to the terms of the Mozilla Public
-         * License, v. 2.0. If a copy of the MPL was not distributed with this
-         * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+    /* This Source Code Form is subject to the terms of the Mozilla Public
+     * License, v. 2.0. If a copy of the MPL was not distributed with this
+     * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-        // Include required functions file
-        require_once(realpath(__DIR__ . '/../includes/functions.php'));
-        require_once(realpath(__DIR__ . '/../includes/authenticate.php'));
-	require_once(realpath(__DIR__ . '/../includes/display.php'));
-	require_once(realpath(__DIR__ . '/../includes/alerts.php'));
+    // Include required functions file
+    require_once(realpath(__DIR__ . '/../includes/functions.php'));
+    require_once(realpath(__DIR__ . '/../includes/authenticate.php'));
+    require_once(realpath(__DIR__ . '/../includes/display.php'));
+    require_once(realpath(__DIR__ . '/../includes/alerts.php'));
 
-        // Include Zend Escaper for HTML Output Encoding
-        require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'));
-        $escaper = new Zend\Escaper\Escaper('utf-8');
+    // Include Zend Escaper for HTML Output Encoding
+    require_once(realpath(__DIR__ . '/../includes/Component_ZendEscaper/Escaper.php'));
+    $escaper = new Zend\Escaper\Escaper('utf-8');
 
-        // Add various security headers
-        header("X-Frame-Options: DENY");
-        header("X-XSS-Protection: 1; mode=block");
+    // Add various security headers
+    add_security_headers();
 
-        // If we want to enable the Content Security Policy (CSP) - This may break Chrome
-        if (csp_enabled())
-        {
-                // Add the Content-Security-Policy header
-		header("Content-Security-Policy: default-src 'self' 'unsafe-inline';");
-        }
-
+    if (!isset($_SESSION))
+    {
         // Session handler is database
         if (USE_DATABASE_FOR_SESSIONS == "true")
         {
-		session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+            session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
         }
 
         // Start the session
-	session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
+        session_set_cookie_params(0, '/', '', isset($_SERVER["HTTPS"]), true);
 
-        if (!isset($_SESSION))
+        session_name('SimpleRisk');
+        session_start();
+    }
+
+    // Include the language file
+    require_once(language_file());
+
+    require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
+
+    // Check for session timeout or renegotiation
+    session_check();
+
+    // Check if access is authorized
+    if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
+    {
+        set_unauthenticated_redirect();
+        header("Location: ../index.php");
+        exit(0);
+    }
+
+    // Check if access is authorized
+    if (!isset($_SESSION["admin"]) || $_SESSION["admin"] != "1")
+    {
+        header("Location: ../index.php");
+        exit(0);
+    }
+
+    // If the extra directory exists
+    if (is_dir(realpath(__DIR__ . '/../extras/notification')))
+    {
+        // Include the Notification Extra
+        require_once(realpath(__DIR__ . '/../extras/notification/index.php'));
+
+        // If the user wants to activate the extra
+        if (isset($_POST['activate']))
         {
-        	session_name('SimpleRisk');
-        	session_start();
+            // Enable the Notification Extra
+            enable_notification_extra();
         }
 
-        // Include the language file
-        require_once(language_file());
-
-        require_once(realpath(__DIR__ . '/../includes/csrf-magic/csrf-magic.php'));
-
-        // Check for session timeout or renegotiation
-        session_check();
-
-        // Check if access is authorized
-        if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
+        // If the user wants to deactivate the extra
+        if (isset($_POST['deactivate']))
         {
-		set_unauthenticated_redirect();
-                header("Location: ../index.php");
-                exit(0);
+            // Disable the Notification Extra
+            disable_notification_extra();
         }
 
-        // Check if access is authorized
-        if (!isset($_SESSION["admin"]) || $_SESSION["admin"] != "1")
+        // If the user updated the configuration
+        if (isset($_POST['submit']))
         {
-                header("Location: ../index.php");
-                exit(0);
+            // Update the notification configuration
+            update_notification_config();
         }
+    }
 
-	// If the extra directory exists
-	if (is_dir(realpath(__DIR__ . '/../extras/notification')))
-	{
-		// Include the Notification Extra
-		require_once(realpath(__DIR__ . '/../extras/notification/index.php'));
-
-                // If the user wants to activate the extra
-                if (isset($_POST['activate']))
-                {
-                        // Enable the Notification Extra
-                        enable_notification_extra();
-                }
-
-                // If the user wants to deactivate the extra
-                if (isset($_POST['deactivate']))
-                {
-                        // Disable the Notification Extra
-                        disable_notification_extra();
-                }
-
-        	// If the user updated the configuration
-        	if (isset($_POST['submit']))
-        	{
-	                // Update the notification configuration
-        	        update_notification_config();
-        	}
-	}
-
-/*********************
- * FUNCTION: DISPLAY *
- *********************/
-function display($display = "")
-{
-	global $lang;
-	global $escaper;
+    /*********************
+     * FUNCTION: DISPLAY *
+     *********************/
+    function display($display = "")
+    {
+        global $lang;
+        global $escaper;
 
         // If the extra directory exists
         if (is_dir(realpath(__DIR__ . '/../extras/notification')))
         {
-                // But the extra is not activated
-                if (!notification_extra())
+            // But the extra is not activated
+            if (!notification_extra())
+            {
+                // If the extra is not restricted based on the install type
+                if (!restricted_extra("notification"))
                 {
-                        echo "<form name=\"activate\" method=\"post\" action=\"\">\n";
-                        echo "<input type=\"submit\" value=\"" . $escaper->escapeHtml($lang['Activate']) . "\" name=\"activate\" /><br />";
-                        echo "</form>\n";
-                        echo "</div>\n";
+                    echo "<form name=\"activate\" method=\"post\" action=\"\">\n";
+                    echo "<input type=\"submit\" value=\"" . $escaper->escapeHtml($lang['Activate']) . "\" name=\"activate\" /><br />";
+                    echo "</form>\n";
+                    echo "</div>\n";
                 }
-                // Once it has been activated
-                else
-                {
-                        // Include the Notification Extra
-                        require_once(realpath(__DIR__ . '/../extras/notification/index.php'));
+                // The extra is restricted
+                else echo $escaper->escapeHtml($lang['YouNeedToUpgradeYourSimpleRiskSubscription']);
+            }
+            // Once it has been activated
+            else
+            {
+                // Include the Notification Extra
+                require_once(realpath(__DIR__ . '/../extras/notification/index.php'));
 
-                        display_notification();
-                }
+                display_notification();
+            }
         }
         // Otherwise, the Extra does not exist
         else
         {
-                echo "<a href=\"https://www.simplerisk.com/extras\" target=\"_blank\">Purchase the Extra</a>\n";
+            echo "<a href=\"https://www.simplerisk.com/extras\" target=\"_blank\">Purchase the Extra</a>\n";
         }
-}
+    }
 
 ?>
 
@@ -131,6 +129,7 @@ function display($display = "")
 <html>
 
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>
@@ -145,14 +144,17 @@ function display($display = "")
 
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+    <?php
+        setup_alert_requirements("..");
+    ?>    
   </head>
 
   <body>
 <?php
-	view_top_menu("Configure");
+    view_top_menu("Configure");
 
-	// Get any alet messages
-	get_alert();
+    // Get any alet messages
+    get_alert();
 ?>
     <div class="container-fluid">
       <div class="row-fluid">
@@ -173,15 +175,20 @@ function display($display = "")
     </div>
     <script>
         $(document).ready(function(){
-            $("#cron_period").change(function(){
+            $(".period-dropdown").change(function(){
                 var period = $(this).val();
-                $(".specified_time_holder").hide();
-                $("input, select", ".specified_time_holder").prop('disabled', true);
                 
-                $("#specified_" + period).show();
-                $("input, select", "#specified_" + period).prop('disabled', false);
+                var container = $(this).closest("table");
+                $(".specified_time_holder", container).hide();
+                $(".specified_time_holder input, .specified_time_holder select", container).prop('disabled', true);
+                
+                $("#specified_" + period, container).show();
+                $("#specified_" + period + " input," + "#specified_" + period + " select", container).prop('disabled', false);
+                
             })
-        })
+        });
+
+        <?php prevent_form_double_submit_script(); ?>
     </script>
   </body>
 

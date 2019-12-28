@@ -1,760 +1,16 @@
 function closeSearchBox()
 {
-  document.getElementById("selections").style.display = "none";
+    document.getElementById("selections").style.display = "none";
 }
 
-function check_id()
-{
-//  elements = document.getElementsByClassName("id");
-//  checkbox = document.getElementById("checkbox_id");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-} 
-
-function check_status()
-{
-//  elements = document.getElementsByClassName("status");
-//  checkbox = document.getElementById("checkbox_risk_status");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_subject()
-{
-//  elements = document.getElementsByClassName("subject");
-//  checkbox = document.getElementById("checkbox_subject");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_reference_id()
-{
-//  elements = document.getElementsByClassName("reference_id");
-//  checkbox = document.getElementById("checkbox_reference_id");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_regulation()
-{
-//  elements = document.getElementsByClassName("regulation");
-//  checkbox = document.getElementById("checkbox_regulation");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_control_number()
-{
-//  elements = document.getElementsByClassName("control_number");
-//  checkbox = document.getElementById("checkbox_control_number");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_location()
-{
-//  elements = document.getElementsByClassName("location");
-//  checkbox = document.getElementById("checkbox_location");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_source()
-{
-//  elements = document.getElementsByClassName("source");
-//  checkbox = document.getElementById("checkbox_source");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_category()
-{
-//  elements = document.getElementsByClassName("category");
-//  checkbox = document.getElementById("checkbox_category");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_team()
-{
-//  elements = document.getElementsByClassName("team");
-//  checkbox = document.getElementById("checkbox_team");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_technology()
-{
-//  elements = document.getElementsByClassName("technology");
-//  checkbox = document.getElementById("checkbox_technology");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_owner()
-{
-//  elements = document.getElementsByClassName("owner");
-//  checkbox = document.getElementById("checkbox_owner");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_manager()
-{
-//  elements = document.getElementsByClassName("manager");
-//  checkbox = document.getElementById("checkbox_manager");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_submitted_by()
-{
-//  elements = document.getElementsByClassName("submitted_by");
-//  checkbox = document.getElementById("checkbox_submitted_by");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_scoring_method()
-{
-//  elements = document.getElementsByClassName("scoring_method");
-//  checkbox = document.getElementById("checkbox_scoring_method");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_calculated_risk()
-{
-//  elements = document.getElementsByClassName("calculated_risk");
-//  checkbox = document.getElementById("checkbox_calculated_risk");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_residual_risk()
-{
-//  elements = document.getElementsByClassName("residual_risk");
-//  checkbox = document.getElementById("checkbox_residual_risk");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_submission_date()
-{
-//  elements = document.getElementsByClassName("submission_date");
-//  checkbox = document.getElementById("checkbox_submission_date");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_review_date()
-{
-//  elements = document.getElementsByClassName("review_date");
-//  checkbox = document.getElementById("checkbox_review_date");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_project()
-{
-//  elements = document.getElementsByClassName("project");
-//  checkbox = document.getElementById("checkbox_project");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_mitigation_planned()
-{
-//  elements = document.getElementsByClassName("mitigation_planned");
-//  checkbox = document.getElementById("checkbox_mitigation_planned");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_management_review()
-{
-//  elements = document.getElementsByClassName("management_review");
-//  checkbox = document.getElementById("checkbox_management_review");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_days_open()
-{
-//  elements = document.getElementsByClassName("days_open");
-//  checkbox = document.getElementById("checkbox_days_open");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_next_review_date()
-{
-//  elements = document.getElementsByClassName("next_review_date");
-//  checkbox = document.getElementById("checkbox_next_review_date");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_next_step()
-{
-//  elements = document.getElementsByClassName("next_step");
-//  checkbox = document.getElementById("checkbox_next_step");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_affected_assets()
-{
-//  elements = document.getElementsByClassName("affected_assets");
-//  checkbox = document.getElementById("AffectedAssets");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_risk_assessment(){
-//  elements = document.getElementsByClassName("risk_assessment");
-//  checkbox = document.getElementById("RiskAssessment");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_additional_notes(){
-//  elements = document.getElementsByClassName("additional_notes");
-//  checkbox = document.getElementById("AdditionalNotes");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_current_solution(){
-//  elements = document.getElementsByClassName("current_solution");
-//  checkbox = document.getElementById("CurrentSolution");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_security_recommendations(){
-//  elements = document.getElementsByClassName("security_recommendations");
-//  checkbox = document.getElementById("SecurityRecommendations");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_security_requirements(){
-//  elements = document.getElementsByClassName("security_requirements");
-//  checkbox = document.getElementById("SecurityRequirements");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_planning_strategy()
-{
-//  elements = document.getElementsByClassName("planning_strategy");
-//  checkbox = document.getElementById("checkbox_planning_strategy");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_mitigation_effort()
-{
-//  elements = document.getElementsByClassName("mitigation_effort");
-//  checkbox = document.getElementById("checkbox_mitigation_effort");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_mitigation_cost()
-{
-//  elements = document.getElementsByClassName("mitigation_cost");
-//  checkbox = document.getElementById("checkbox_mitigation_cost");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_mitigation_owner()
-{
-//  elements = document.getElementsByClassName("mitigation_owner");
-//  checkbox = document.getElementById("checkbox_mitigation_owner");
-
-//  if(checkbox.checked)
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
-
-function check_mitigation_team()
-{
-//  elements = document.getElementsByClassName("mitigation_team");
-//  checkbox = document.getElementById("checkbox_mitigation_team");
-
-//  if(checkbox.checked)
-//  { 
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "";
-//    }
-//  }
-//  else
-//  {
-//    for(i=0; i<elements.length; i++)
-//    {
-//      elements[i].style.display = "none";
-//    }
-//  }
-}
 $(document).ready(function(){
     if($(".risk-datatable").length){
+        var sortColumns = [["calculated_risk", "desc"], ["id", "asc"], ["subject", "asc"], ["residual_risk", "desc"]];
+        var defaultSortColumnIndex = 0;
+        var defaultSortColumn = sortColumns[$("#sort").val()];
+        if(defaultSortColumn == undefined){
+            defaultSortColumn = sortColumns[defaultSortColumnIndex];
+        }
         var columnOptions = [];
         var columnNames = [];
         $(".risk-datatable tr.main th").each(function(index){
@@ -762,12 +18,39 @@ $(document).ready(function(){
             if(columnNames.indexOf(name) > -1){
                 return;
             }
-            columnNames.push(name)
+            columnNames.push(name);
             if(!$("form[name='get_risks_by'] input.hidden-checkbox[name='"+ name +"']").is(':checked')){
                 columnOptions.push(index);
             }
+            if(defaultSortColumn != undefined && name == defaultSortColumn[0]) {
+                defaultSortColumnIndex = index;
+            }
         })
         
+        // Create multiselect of table column filter dropdowns
+        var createMultiSelectColumnFilter = function(selfTable, filterContainer){
+            filterContainer || (filterContainer = selfTable.table().container());
+            $('.dynamic-column-filter').multiselect({
+                enableFiltering: true,
+                buttonWidth: '100%',
+                maxHeight: 150,
+                enableCaseInsensitiveFiltering: true,
+                onDropdownShown: function(){
+                    $('.dataTables_scrollFoot', selfTable.table().container()).css('height', '220px')
+                },
+                onDropdownHide: function(){
+                    $('.dataTables_scrollFoot', selfTable.table().container()).css('height', 'auto')
+                    selfTable.columns.adjust()
+                },
+                onChange: function(){
+                    selfTable.columns.adjust()
+                }
+                
+            })
+            selfTable.columns.adjust()
+            
+        }
+
         var riskDataTables = [];
         $(".risk-datatable").each(function(index){
             var $this = $(this);
@@ -778,34 +61,120 @@ $(document).ready(function(){
                 processing: true,
                 serverSide: true,
                 bSort: true,
+//                ordering: false,
                 pagingType: "full_numbers",
-                dom : "flrti<'#view-all-"+ index +".view-all'>p",
+                dom : "flrti<'.download-by-group'><'#view-all-"+ index +".view-all'>p",
                 ajax: {
                     url: BASE_URL + '/api/reports/dynamic',
                     type: "post",
-                    data: function(d){
-                        d.status            = $("#status").val();
-                        d.group             = $("#group").val();
-                        d.sort              = $("#sort").val();
-                        d.affected_asset    = $("#affected_asset").val();
-                        d.group_value       = $this.data('group');
+                    data: function(d) {
+                        d.status        = $("#status").val();
+                        d.group         = $("#group").val();
+                        d.sort          = $("#sort").val();
+                        d.group_value   = $this.data('group');
+                        
+                        // Set params in risks_by_teams page
+                        if ($("#teams").length) {
+                            d.risks_by_team     = 1;
+                            d.teams             = $("#teams").val();
+                            d.owners            = $("#owners").val();
+                            d.ownersmanagers    = $("#ownersmanagers").val();
+                        } else {
+                            d.tags_filter               = $("#tags_filter").val();
+                            d.locations_filter          = $("#locations_filter").val();
+                            d.affected_assets_filter    = $("#affected_assets_filter").val();
+                        }
                     }
                 },
+                order: [[defaultSortColumnIndex, defaultSortColumn[1]]],
                 columnDefs : [
                     {
                         "targets" : columnOptions,
                         "visible" : false
                     },
                     {
-                        "targets" : 15,
+                        // Calculated risk
+                        "targets" : 16,
                         "className" : "risk-cell",
                     },
                     {
-                        "targets" : 16,
+                        // Residulat risk
+                        "targets" : 17,
                         "className" : "risk-cell",
-                    }
-                ]
+                    },
+                    {
+                        /**
+                        * 21: mitigation_planned
+                        * 22: managment_review
+                        * 23: days_open
+                        * 26: affected_assets
+                        * 27: risk_assessment
+                        * 28: additional_notes
+                        * 29: current_solution
+                        * 30: security_recommendations
+                        * 41: risk_tags
+                        */
+                        "targets" : [21, 22, 23, 26, 27, 28, 29, 30, 41],
+                        "orderable" : false,
+                    },
+                ],
+                initComplete: function(){
+                    var params = {};
+                        params.status        = $("#status").val();
+                        params.group         = $("#group").val();
+                        params.sort          = $("#sort").val();
+                        params.group_value   = $this.data('group');
+                        
+                        // Set params in risks_by_teams page
+                        if ($("#teams").length) {
+                            params.risks_by_team     = 1;
+                            params.teams             = $("#teams").val();
+                            params.owners            = $("#owners").val();
+                            params.ownersmanagers    = $("#ownersmanagers").val();
+                        } else {
+                            params.tags_filter               = $("#tags_filter").val();
+                            params.locations_filter          = $("#locations_filter").val();
+                            params.affected_assets_filter    = $("#affected_assets_filter").val();
+                        }
+
+                    var self = this;
+                        
+                    $.ajax({
+                        type: "POST",
+                        url: BASE_URL + "/api/reports/dynamic_unique_column_data",
+                        data: params,
+                        dataType: 'json',
+                        success: function(data){
+                            
+                            /*
+                            self.api().columns().every( function () {
+                                var column = this;
+                                var columnName = $(column.footer()).data('name').toLowerCase();
+                                var options = data[columnName];
+                                if(options === undefined){
+                                    $(column.footer()).empty();
+                                    $('<div style="min-width: 150px">&nbsp;</div>').appendTo( $(column.footer()).empty() );
+                                }else{
+                                    var select = $('<select class="dynamic-column-filter" multiple></select>').appendTo( $(column.footer()).empty() );
+                                    options.forEach( function ( option ) {
+                                        select.append( '<option value="'+option.value+'">'+option.text+'</option>' )
+                                    });
+                                }
+                            });
+
+                            createMultiSelectColumnFilter(self.api());
+                            */
+                        },
+                        error: function(xhr,status,error){
+                            if(!retryCSRF(xhr, this))
+                            {
+                            }
+                        }
+                    });
+                    
+                }
             });
+
             riskDatatable.on('draw', function(e, settings){
                 if(settings._iDisplayLength == -1){
                     $("#" + settings.sTableId + "_wrapper").find(".paginate_button.current").removeClass("current");
@@ -817,8 +186,17 @@ $(document).ready(function(){
                 $('.paginate_button.next').html('<i class="fa fa-chevron-right"></i>');
             })
             riskDataTables.push(riskDatatable);
-        })
+        });
+
+        // This is needed to refresh with a new magic token if the previous
+        // token expired
+        $(document.body).on('xhr.dt', function (e, settings, json, xhr){
+            if(json === null && xhr.status === 403)
+                retryDatatableCSRF(xhr, new $.fn.dataTable.Api(settings));
+        });
+
         $('.view-all').html("All");
+        $('.download-by-group').html("<i class=\"fa fa-download\" aria-hidden=\"true\"></i>");
         
         $("form[name='get_risks_by'] .hidden-checkbox").click(function(e){
             
@@ -826,6 +204,7 @@ $(document).ready(function(){
                 var column = riskDataTables[key].column("th[data-name='"+ $(this).attr('name') +"']");
                 if($(this).is(':checked')){
                     column.visible(true);
+//                    createMultiSelectColumnFilter(riskDataTables[key], column.footer());
                 }else{
                     column.visible(false);
                 }
@@ -844,7 +223,11 @@ $(document).ready(function(){
                     columns: viewColumns,
                 },
                 success: function(data){
-                    console.log('success')
+                },
+                error: function(xhr,status,error){
+                    if(!retryCSRF(xhr, this))
+                    {
+                    }
                 }
             });
         })
@@ -873,14 +256,24 @@ $(document).ready(function(){
                 oSettings[0]._iDisplayLength = 10;
                 riskDataTables[index].draw()
             }
+        })
             
+        $("body").on("click", '.download-by-group', function(){
+            // $("#get_risks_by").attr('target', '_blank');
+            var group_value = $(this).closest('.dataTables_wrapper').find(".risk-datatable").data('group');
+            document.get_risks_by.action += "?option=download-by-group&group_value=" + group_value;
+            document.get_risks_by.submit();
+            document.get_risks_by.action = "";
+            // $("#get_risks_by").attr('target', '');
         })
     }
     
     $("#export-dynamic-risk-report").click(function(e){
+        // $("#get_risks_by").attr('target', '_blank');
         document.get_risks_by.action += "?option=download";
         document.get_risks_by.submit();
         document.get_risks_by.action = "";
-//        document.location.href = "dynamic_risk_report.php?option";
+        // $("#get_risks_by").attr('target', '');
     })
+    
 })
