@@ -49,8 +49,8 @@
     }
 
     &:before{
-      width: 31px;
-      height: 31px;
+      width: 35px;
+      height: 35px;
       content: "";
       display: block;
       background-color: #d1d3d4;
@@ -63,15 +63,15 @@
 
   }
 
-  li.active a,
-  li.active a:hover,
-  li.active a:visited,
-  li.active a:active
+  li a.active,
+  li a.active:hover,
+  li a.active:visited,
+  li a.active:active
   {
     background-color: $color-3;
   }
 
-  li.active a{
+  li a.active{
     position: relative;
 	  background: $color-3;
 
@@ -85,7 +85,7 @@
     }
   }
 
-  li.active a:after {
+  li a.active:after {
   	background-color:$color-3;
     width: 27px;
     height: 27px;
@@ -102,7 +102,7 @@
     transform: rotate(45deg);
   }
 
-  &.nav-pills.nav-stacked > li > a{
+  &.nav.flex-column > li > a{
     margin-bottom: 8px;
   }
 }

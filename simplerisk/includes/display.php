@@ -3725,16 +3725,16 @@ function view_governance_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
-    echo ($active == "DefineControlFrameworks" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"index.php\"> <span>1</span> " . $escaper->escapeHtml($lang['DefineControlFrameworks']) . "</a>\n";
+    echo "<ul class=\"nav flex-column aside--nav \">\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "DefineControlFrameworks" ? " active " : "") . "\" href=\"index.php\"> <span>1</span> " . $escaper->escapeHtml($lang['DefineControlFrameworks']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "DocumentProgram" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"documentation.php\"> <span>2</span> " . $escaper->escapeHtml($lang['DocumentProgram']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "DocumentProgram" ? " active " : "") . "\" href=\"documentation.php\"> <span>2</span> " . $escaper->escapeHtml($lang['DocumentProgram']) . "</a>\n";
     echo "</li>\n";
     if (check_permission_exception('view')) {
-        echo ($active == "DocumentExceptions" ? "<li class=\"active\">\n" : "<li>\n");
-        echo "<a href=\"document_exceptions.php\"> <span>3</span> " . $escaper->escapeHtml($lang['DocumentExceptions']) . "</a>\n";
+        echo "<li class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "DocumentExceptions" ? " active " : "") . "\" href=\"document_exceptions.php\"> <span>3</span> " . $escaper->escapeHtml($lang['DocumentExceptions']) . "</a>\n";
         echo "</li>\n";
     }
     echo "</ul>\n";
@@ -3748,21 +3748,21 @@ function view_risk_management_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
-    echo ($active == "SubmitYourRisks" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"index.php\"> <span>1</span> " . $escaper->escapeHtml($lang['SubmitYourRisks']) . "</a>\n";
+    echo "<ul class=\"nav flex-column aside--nav \">\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "SubmitYourRisks" ? " active " : "") . "\" href=\"index.php\"> <span>1</span> " . $escaper->escapeHtml($lang['SubmitYourRisks']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "PlanYourMitigations" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"plan_mitigations.php\"> <span>2</span> " . $escaper->escapeHtml($lang['PlanYourMitigations']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "PlanYourMitigations" ? " active " : "") . "\" href=\"plan_mitigations.php\"> <span>2</span> " . $escaper->escapeHtml($lang['PlanYourMitigations']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "PerformManagementReviews" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"management_review.php\"> <span>3</span> " . $escaper->escapeHtml($lang['PerformManagementReviews']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "PerformManagementReviews" ? " active " : "") . "\" href=\"management_review.php\"> <span>3</span> " . $escaper->escapeHtml($lang['PerformManagementReviews']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "PrioritizeForProjectPlanning" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"prioritize_planning.php\"> <span>4</span> " . $escaper->escapeHtml($lang['PrioritizeForProjectPlanning']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "PrioritizeForProjectPlanning" ? " active " : "") . "\" href=\"prioritize_planning.php\"> <span>4</span> " . $escaper->escapeHtml($lang['PrioritizeForProjectPlanning']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "ReviewRisksRegularly" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"review_risks.php\"> <span>5</span> " . $escaper->escapeHtml($lang['ReviewRisksRegularly']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ReviewRisksRegularly" ? " active " : "") . "\" href=\"review_risks.php\"> <span>5</span> " . $escaper->escapeHtml($lang['ReviewRisksRegularly']) . "</a>\n";
     echo "</li>\n";
     echo "</ul>\n";
 }
@@ -3775,19 +3775,19 @@ function view_compliance_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
-        echo ($active == "DefineTests" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"index.php\"> <span>1</span> " . $escaper->escapeHtml($lang['DefineTests']) . "</a>\n";
-        echo "</li>\n";
-        echo ($active == "InitialAudits" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"audit_initiation.php\"> <span>2</span> " . $escaper->escapeHtml($lang['InitiateAudits']) . "</a>\n";
-        echo "</li>\n";
-        echo ($active == "ActiveAudits" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"active_audits.php\"> <span>3</span> " . $escaper->escapeHtml($lang['ActiveAudits']) . "</a>\n";
-        echo "</li>\n";
-        echo ($active == "PastAudits" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"past_audits.php\"> <span>4</span> " . $escaper->escapeHtml($lang['PastAudits']) . "</a>\n";
-        echo "</li>\n";
+    echo "<ul class=\"nav flex-column aside--nav \">\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "DefineTests" ? " active " : "") . "\" href=\"index.php\"> <span>1</span> " . $escaper->escapeHtml($lang['DefineTests']) . "</a>\n";
+    echo "</li>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "InitialAudits" ? " active "  : "") . "\" href=\"audit_initiation.php\"> <span>2</span> " . $escaper->escapeHtml($lang['InitiateAudits']) . "</a>\n";
+    echo "</li>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ActiveAudits" ? " active " : "") . "\" href=\"active_audits.php\"> <span>3</span> " . $escaper->escapeHtml($lang['ActiveAudits']) . "</a>\n";
+    echo "</li>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "PastAudits" ? " active " : "") . "\" href=\"past_audits.php\"> <span>4</span> " . $escaper->escapeHtml($lang['PastAudits']) . "</a>\n";
+    echo "</li>\n";
     echo "</ul>\n";
 }
 
@@ -3799,21 +3799,20 @@ function view_asset_management_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
-    echo ($active == "AutomatedDiscovery" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"index.php\"> <span>1</span>" . $escaper->escapeHtml($lang['AutomatedDiscovery']) . "</a>\n";
+    echo "<ul class=\"nav flex-column aside--nav \">\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AutomatedDiscovery" ? " active " : "") . "\" href=\"index.php\"> <span>1</span>" . $escaper->escapeHtml($lang['AutomatedDiscovery']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AddDeleteAssets" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"adddeleteassets.php\"> <span>2</span>" . $escaper->escapeHtml($lang['AddDeleteAssets']) . "</a>\n";
-    echo "</li>\n";
-    $has_assets = has_assets();
-    if ($has_assets) {
-        echo ($active == "EditAssets" ? "<li id=\"EditAssets\" class=\"active\">\n" : "<li id=\"EditAssets\">\n");
-        echo "<a href=\"edit.php\"> <span>3</span> " . $escaper->escapeHtml($lang['EditAssets']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AddDeleteAssets" ? " active " : "") . "\" href=\"adddeleteassets.php\"> <span>2</span>" . $escaper->escapeHtml($lang['AddDeleteAssets']) . "</a>\n";
+    echo "</li>\n";    
+    if ($has_assets = has_assets()) {
+        echo "<li id=\"EditAssets\" class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "EditAssets" ? " active " : "") . "\" href=\"edit.php\"> <span>3</span> " . $escaper->escapeHtml($lang['EditAssets']) . "</a>\n";
         echo "</li>\n";
     }
-    echo ($active == "ManageAssetGroups" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"manage_asset_groups.php\"> <span>" . ($has_assets?"4":"3") . "</span>" . $escaper->escapeHtml($lang['ManageAssetGroups']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ManageAssetGroups" ? " active " : "") . "\" href=\"manage_asset_groups.php\"> <span>" . ($has_assets?"4":"3") . "</span>" . $escaper->escapeHtml($lang['ManageAssetGroups']) . "</a>\n";
     echo "</li>\n";    
     echo "</ul>\n";
 }
@@ -3826,12 +3825,12 @@ function view_assessments_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
-    echo ($active == "AvailableAssessments" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"index.php\"> " . $escaper->escapeHtml($lang['AvailableAssessments']) . "</a>\n";
+    echo "<ul class=\"nav flex-column aside--nav \">\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AvailableAssessments" ? " active " : "") . "\" href=\"index.php\"> " . $escaper->escapeHtml($lang['AvailableAssessments']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "PendingRisks" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"risks.php\"> " .  $escaper->escapeHtml($lang['PendingRisks']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "PendingRisks" ? " active " : "") . "\" href=\"risks.php\"> " .  $escaper->escapeHtml($lang['PendingRisks']) . "</a>\n";
     echo "</li>\n";
 
     // If the assessments extra is installed
@@ -3855,98 +3854,97 @@ function view_reporting_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
-    echo ($active == "Overview" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"index.php\">" . $escaper->escapeHtml($lang['Overview']) . "</a>\n";
+    echo "<ul class=\"nav flex-column aside--nav\">\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "Overview" ? " active " : "") . "\" href=\"index.php\">" . $escaper->escapeHtml($lang['Overview']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RiskDashboard" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"dashboard.php\">" . $escaper->escapeHtml($lang['RiskDashboard']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RiskDashboard" ? " active " : "") . "\" href=\"dashboard.php\">" . $escaper->escapeHtml($lang['RiskDashboard']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RiskAppetiteReport" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"risk_appetite.php\">" . $escaper->escapeHtml($lang['RiskAppetiteReport']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RiskAppetiteReport" ? " active " : "") . "\" href=\"risk_appetite.php\">" . $escaper->escapeHtml($lang['RiskAppetiteReport']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RiskTrend" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"trend.php\">" . $escaper->escapeHtml($lang['RiskTrend']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RiskTrend" ? " active " : "") ."\" href=\"trend.php\">" . $escaper->escapeHtml($lang['RiskTrend']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "DynamicRiskReport" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"dynamic_risk_report.php\">" . $escaper->escapeHtml($lang['DynamicRiskReport']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "DynamicRiskReport" ? " active " : "") . "\" href=\"dynamic_risk_report.php\">" . $escaper->escapeHtml($lang['DynamicRiskReport']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RiskAverageOverTime" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"risk_average_baseline_metric.php\">" . $escaper->escapeHtml($lang['RiskAverageOverTime']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RiskAverageOverTime" ? " active " : "") . "\" href=\"risk_average_baseline_metric.php\">" . $escaper->escapeHtml($lang['RiskAverageOverTime']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "LikelihoodImpact" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"likelihood_impact.php\">" . $escaper->escapeHtml($lang['LikelihoodImpact']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "LikelihoodImpact" ? " active " : "") . "\" href=\"likelihood_impact.php\">" . $escaper->escapeHtml($lang['LikelihoodImpact']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RiskAdvice" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"riskadvice.php\">" . $escaper->escapeHtml($lang['RiskAdvice']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RiskAdvice" ? " active " : "") . "\" href=\"riskadvice.php\">" . $escaper->escapeHtml($lang['RiskAdvice']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RisksAndAssets" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"risks_and_assets.php\">" . $escaper->escapeHtml($lang['RisksAndAssets']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RisksAndAssets" ? " active " : "") . "\" href=\"risks_and_assets.php\">" . $escaper->escapeHtml($lang['RisksAndAssets']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RisksAndControls" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"risks_and_controls.php\">" . $escaper->escapeHtml($lang['RisksAndControls']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RisksAndControls" ? " active " : "") . "\" href=\"risks_and_controls.php\">" . $escaper->escapeHtml($lang['RisksAndControls']) . "</a>\n";
     echo "</li>\n";    
-    echo ($active == "AllOpenRisksAssignedToMeByRiskLevel" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"my_open.php\">" . $escaper->escapeHtml($lang['AllOpenRisksAssignedToMeByRiskLevel']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksAssignedToMeByRiskLevel" ? " active " : "") . "\" href=\"my_open.php\">" . $escaper->escapeHtml($lang['AllOpenRisksAssignedToMeByRiskLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksNeedingReview" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"review_needed.php\">" . $escaper->escapeHtml($lang['AllOpenRisksNeedingReview']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksNeedingReview" ? " active " : "") . "\" href=\"review_needed.php\">" . $escaper->escapeHtml($lang['AllOpenRisksNeedingReview']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksByTeam" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"risks_open_by_team.php?id=true&risk_status=true&subject=true&calculated_risk=true&submission_date=true&team=true&mitigation_planned=true&management_review=true&owner=true&manager=true\">" . $escaper->escapeHtml($lang['AllOpenRisksByTeamByLevel']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksByTeam" ? " active " : "") . "\" href=\"risks_open_by_team.php?id=true&risk_status=true&subject=true&calculated_risk=true&submission_date=true&team=true&mitigation_planned=true&management_review=true&owner=true&manager=true\">" . $escaper->escapeHtml($lang['AllOpenRisksByTeamByLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "HighRiskReport" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"high.php\">" . $escaper->escapeHtml($lang['HighRiskReport']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "HighRiskReport" ? " active " : "") . "\" href=\"high.php\">" . $escaper->escapeHtml($lang['HighRiskReport']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "SubmittedRisksByDate" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"submitted_by_date.php\">" . $escaper->escapeHtml($lang['SubmittedRisksByDate']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "SubmittedRisksByDate" ? " active " : "") . "\" href=\"submitted_by_date.php\">" . $escaper->escapeHtml($lang['SubmittedRisksByDate']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "MitigationsByDate" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"mitigations_by_date.php\">" . $escaper->escapeHtml($lang['MitigationsByDate']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "MitigationsByDate" ? " active " : "") . "\" href=\"mitigations_by_date.php\">" . $escaper->escapeHtml($lang['MitigationsByDate']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "ManagementReviewsByDate" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"mgmt_reviews_by_date.php\">" . $escaper->escapeHtml($lang['ManagementReviewsByDate']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ManagementReviewsByDate" ? " active " : "") . "\" href=\"mgmt_reviews_by_date.php\">" . $escaper->escapeHtml($lang['ManagementReviewsByDate']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "ClosedRisksByDate" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"closed_by_date.php\">" . $escaper->escapeHtml($lang['ClosedRisksByDate']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ClosedRisksByDate" ? " active " : "") . "\" href=\"closed_by_date.php\">" . $escaper->escapeHtml($lang['ClosedRisksByDate']) . "</a>\n";
     echo "</li>\n";
     
     // If User has permission for complicance menu, shows Audit Timeline report
     if(!empty($_SESSION['compliance']))
     {
-        echo ($active == "AuditTimeline" ? "<li class=\"active\">\n" : "<li>\n");
-        echo "<a href=\"audit_timeline.php\">" . $escaper->escapeHtml($lang['AuditTimeline']) . "</a>\n";
+        echo "<li class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "AuditTimeline" ? " active " : "") . "\" href=\"audit_timeline.php\">" . $escaper->escapeHtml($lang['AuditTimeline']) . "</a>\n";
         echo "</li>\n";
     } 
-
     // Obsolete Reports
-    echo "<li id=\"obsolete_menu\"><a href=\"#\" onclick=\"javascript:showObsolete()\">" . $escaper->escapeHtml($lang['ObsoleteReports']) . "</a></li>\n";
-    echo ($active == "AllOpenRisksByRiskLevel" ? "<li class=\"active obsolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"open.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByRiskLevel']) . "</a>\n";
+    echo "<li id=\"obsolete_menu\" class=\"nav-item\"><a href=\"#\" class=\"nav-link\" onclick=\"javascript:showObsolete()\">" . $escaper->escapeHtml($lang['ObsoleteReports']) . "</a></li>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksByRiskLevel" ? " active " : "") . "\" href=\"open.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByRiskLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllClosedRisksByRiskLevel" ? "<li class=\"active obsolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"closed.php\">" . $escaper->escapeHtml($lang['AllClosedRisksByRiskLevel']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllClosedRisksByRiskLevel" ? " active " : "") . "\" href=\"closed.php\">" . $escaper->escapeHtml($lang['AllClosedRisksByRiskLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksByTeam" ? "<li class=\"active obsolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"teams.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByTeam']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksByTeam" ? " active " : "") . "\" href=\"teams.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByTeam']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksByTechnology" ? "<li class=\"active obsolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"technologies.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByTechnology']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksByTechnology" ? " active " : "") . "\" href=\"technologies.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByTechnology']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksByScoringMethod" ? "<li class=\"active osbolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"risk_scoring.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByScoringMethod']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksByScoringMethod" ? " active " : "") . "\" href=\"risk_scoring.php\">" . $escaper->escapeHtml($lang['AllOpenRisksByScoringMethod']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksConsideredForProjectsByRiskLevel" ? "<li class=\"active osbolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"projects.php\">" . $escaper->escapeHtml($lang['AllOpenRisksConsideredForProjectsByRiskLevel']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksConsideredForProjectsByRiskLevel" ? " active " : "" ) . "\" href=\"projects.php\">" . $escaper->escapeHtml($lang['AllOpenRisksConsideredForProjectsByRiskLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksAcceptedUntilNextReviewByRiskLevel" ? "<li class=\"active osbolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"next_review.php\">" . $escaper->escapeHtml($lang['AllOpenRisksAcceptedUntilNextReviewByRiskLevel']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksAcceptedUntilNextReviewByRiskLevel" ? " active " : "") . "\" href=\"next_review.php\">" . $escaper->escapeHtml($lang['AllOpenRisksAcceptedUntilNextReviewByRiskLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AllOpenRisksToSubmitAsAProductionIssueByRiskLevel" ? "<li class=\"active osbolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"production_issues.php\">" . $escaper->escapeHtml($lang['AllOpenRisksToSubmitAsAProductionIssueByRiskLevel']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "AllOpenRisksToSubmitAsAProductionIssueByRiskLevel" ? " active " : "") . "\" href=\"production_issues.php\">" . $escaper->escapeHtml($lang['AllOpenRisksToSubmitAsAProductionIssueByRiskLevel']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "ProjectsAndRisksAssigned" ? "<li class=\"active obsolete\" style=\"display:none;\">\n" : "<li class=\"obsolete\" style=\"display:none;\">\n");
-    echo "<a href=\"projects_and_risks.php\">" . $escaper->escapeHtml($lang['ProjectsAndRisksAssigned']) . "</a>\n";
+    echo "<li class=\"nav-item obsolete\" style=\"display:none;\">\n";
+    echo "<a class=\"nav-link" . ($active == "ProjectsAndRisksAssigned" ? " active " : "") . "\" href=\"projects_and_risks.php\">" . $escaper->escapeHtml($lang['ProjectsAndRisksAssigned']) . "</a>\n";
     echo "</li>\n";
     echo "</ul>\n";
 }
@@ -3959,73 +3957,73 @@ function view_configure_menu($active)
     global $lang;
     global $escaper;
 
-    echo "<ul class=\"nav nav-pills nav-stacked aside--nav \">\n";
+    echo "<ul class=\"nav flex-column aside--nav \">\n";
     if (getTypeOfColumn('mgmt_reviews', 'next_review') == 'varchar') {
-        echo ($active == "FixReviewDates" ? "<li class=\"active\">\n" : "<li>\n");
-        echo "<a href=\"fix_review_dates.php\"><i class=\"fa fa-exclamation-circle\" aria-hidden=\"true\" style=\"color: " . ($active == "FixReviewDates" ? "white": "#bd081c") . "; padding-right: 5px;\"></i>" . $escaper->escapeHtml($lang['FixReviewDates']) . "</a>\n";
+        echo "<li class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "FixReviewDates" ? " active" : "" ) . "\" href=\"fix_review_dates.php\"><i class=\"fa fa-exclamation-circle\" aria-hidden=\"true\" style=\"color: " . ($active == "FixReviewDates" ? "white": "#bd081c") . "; padding-right: 5px;\"></i>" . $escaper->escapeHtml($lang['FixReviewDates']) . "</a>\n";
         echo "</li>\n";
     }
-    echo ($active == "Settings" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"index.php\">" . $escaper->escapeHtml($lang['Settings']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "Settings" ? " active" : "") . "\" href=\"index.php\">" . $escaper->escapeHtml($lang['Settings']) . "</a>\n";
+    echo "</li>\n";    
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ConfigureRiskFormula" ? " active" : "") . "\" href=\"configure_risk_formula.php\">" . $escaper->escapeHtml($lang['ConfigureRiskFormula']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "ConfigureRiskFormula" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"configure_risk_formula.php\">" . $escaper->escapeHtml($lang['ConfigureRiskFormula']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "ConfigureReviewSettings" ? " active" : "") . "\" href=\"review_settings.php\">" . $escaper->escapeHtml($lang['ConfigureReviewSettings']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "ConfigureReviewSettings" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"review_settings.php\">" . $escaper->escapeHtml($lang['ConfigureReviewSettings']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AddAndRemoveValues" ? " active" : "") . "\" href=\"add_remove_values.php\">" . $escaper->escapeHtml($lang['AddAndRemoveValues']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AddAndRemoveValues" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"add_remove_values.php\">" . $escaper->escapeHtml($lang['AddAndRemoveValues']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RoleManagement" ? " active" : "") . "\" href=\"role_management.php\">" . $escaper->escapeHtml($lang['RoleManagement']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RoleManagement" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"role_management.php\">" . $escaper->escapeHtml($lang['RoleManagement']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "UserManagement" ? " active" : "") . "\" href=\"user_management.php\">" . $escaper->escapeHtml($lang['UserManagement']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "UserManagement" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"user_management.php\">" . $escaper->escapeHtml($lang['UserManagement']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "RedefineNamingConventions" ? " active" : "") . "\" href=\"custom_names.php\">" . $escaper->escapeHtml($lang['RedefineNamingConventions']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "RedefineNamingConventions" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"custom_names.php\">" . $escaper->escapeHtml($lang['RedefineNamingConventions']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AssetValuation" ? " active" : "") . "\" href=\"assetvaluation.php\">" . $escaper->escapeHtml($lang['AssetValuation']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "AssetValuation" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"assetvaluation.php\">" . $escaper->escapeHtml($lang['AssetValuation']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "DeleteRisks" ? " active" : "") . "\" href=\"delete_risks.php\">" . $escaper->escapeHtml($lang['DeleteRisks']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "DeleteRisks" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"delete_risks.php\">" . $escaper->escapeHtml($lang['DeleteRisks']) . "</a>\n";
-    echo "</li>\n";
-    echo ($active == "AuditTrail" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"audit_trail.php\">" . $escaper->escapeHtml($lang['AuditTrail']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "AuditTrail" ? " active" : "") . "\" href=\"audit_trail.php\">" . $escaper->escapeHtml($lang['AuditTrail']) . "</a>\n";
     echo "</li>\n";
 
     // If the Import/Export Extra is enabled
     if (import_export_extra())
     {
-        echo ($active == "ImportExport" ? "<li class=\"active\">\n" : "<li>\n");
-        echo "<a href=\"importexport.php\">" . $escaper->escapeHtml($lang['ImportExport']) . "</a>\n";
+        echo "<li class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "ImportExport" ? " active" : "") . "\" href=\"importexport.php\">" . $escaper->escapeHtml($lang['ImportExport']) . "</a>\n";
         echo "</li>\n";
     }
 
     // If the Assessments Extra is enabled
     if (assessments_extra())
     {
-        echo ($active == "ActiveAssessments" ? "<li class=\"active\">\n" : "<li>\n");
-        echo "<a href=\"active_assessments.php\">" . $escaper->escapeHtml($lang['ActiveAssessments']) . "</a>\n";
+        echo "<li class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "ActiveAssessments" ? " active" : "") . "\" href=\"active_assessments.php\">" . $escaper->escapeHtml($lang['ActiveAssessments']) . "</a>\n";
         echo "</li>\n";
     }
 
-    echo ($active == "Extras" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"extras.php\">" . $escaper->escapeHtml($lang['Extras']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "Extras" ? " active" : "") . "\" href=\"extras.php\">" . $escaper->escapeHtml($lang['Extras']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "Announcements" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"announcements.php\">" . $escaper->escapeHtml($lang['Announcements']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "Announcements" ? " active" : "") . "\" href=\"announcements.php\">" . $escaper->escapeHtml($lang['Announcements']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "Register" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"register.php\">" . $escaper->escapeHtml($lang['RegisterAndUpgrade']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "Register" ? " active" : "") . "\" href=\"register.php\">" . $escaper->escapeHtml($lang['RegisterAndUpgrade']) . "</a>\n";
     echo "</li>\n";
-    echo ($active == "Health Check" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"health_check.php\">" . $escaper->escapeHtml($lang['HealthCheck']) ."</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "Health" ? " active" : "") . "\" href=\"health_check.php\">" . $escaper->escapeHtml($lang['HealthCheck']) ."</a>\n";
     echo "</li>\n";
-    echo ($active == "About" ? "<li class=\"active\">\n" : "<li>\n");
-    echo "<a href=\"about.php\">" . $escaper->escapeHtml($lang['About']) . "</a>\n";
+    echo "<li class=\"nav-item\">\n";
+    echo "<a class=\"nav-link" . ($active == "About" ? " active" : "") . "\" href=\"about.php\">" . $escaper->escapeHtml($lang['About']) . "</a>\n";
     echo "</li>\n";
     echo "</ul>\n";
 }

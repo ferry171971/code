@@ -2389,8 +2389,8 @@ span.multiselect-native-select select {
 }
 
 .aside--nav li a:before {
-  width: 31px;
-  height: 31px;
+  width: 35px;
+  height: 35px;
   content: "";
   display: block;
   background-color: #d1d3d4;
@@ -2401,28 +2401,28 @@ span.multiselect-native-select select {
   border: 3px solid #abadaf;
 }
 
-.aside--nav li.active a,
-.aside--nav li.active a:hover,
-.aside--nav li.active a:visited,
-.aside--nav li.active a:active {
+.aside--nav li a.active,
+.aside--nav li a.active:hover,
+.aside--nav li a.active:visited,
+.aside--nav li a.active:active {
   background-color: #ed3139;
 }
 
-.aside--nav li.active a {
+.aside--nav li a.active {
   position: relative;
   background: #ed3139;
 }
 
-.aside--nav li.active a span {
+.aside--nav li a.active span {
   color: #fff;
 }
 
-.aside--nav li.active a:before {
+.aside--nav li a.active:before {
   background-color: #3a3a3a;
   border: 3px solid rgba(171, 173, 175, 0.5);
 }
 
-.aside--nav li.active a:after {
+.aside--nav li a.active:after {
   background-color: #ed3139;
   width: 27px;
   height: 27px;
@@ -2439,7 +2439,7 @@ span.multiselect-native-select select {
   transform: rotate(45deg);
 }
 
-.aside--nav.nav-pills.nav-stacked > li > a {
+.aside--nav.nav.flex-column > li > a {
   margin-bottom: 8px;
 }
 
