@@ -175,6 +175,7 @@
         <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
 
         <script src="../js/jquery.min.js"></script>
+        <script src="../js/popper.min.js"></script>
         <script src="../js/bootstrap.min.js"></script>
         <script language="javascript" src="../js/asset_valuation.js" type="text/javascript"></script>
 

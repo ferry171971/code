@@ -124,6 +124,7 @@ function display()
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>
     <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/jquery-ui.min.css" />

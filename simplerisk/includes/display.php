@@ -3450,155 +3450,88 @@ function view_top_menu($active)
     echo "</script>\n";
 
     echo "<div id=\"load\" style=\"display:none;\">".$escaper->escapeHtml($lang['SendingRequestPleaseWait'])."</div>";
-
+    echo "<nav class=\"navbar l-header fixed-top navbar-expand-lg\">\n";
     // If the page is in the root directory
     if ($active == "Home")
     {
-        echo "<header class=\"l-header\">\n";
-        echo "<div class=\"navbar\">\n";
-        echo "<div class=\"navbar-inner\">\n";
-        echo "<div class=\"container-fluid\">\n";
-            echo "<a class=\"brand\" href=\"https://www.simplerisk.com/\"><img src='images/logo@2x.png' alt='SimpleRisk Logo' /></a>\n";
-        echo "<div class=\"navbar-content\">\n";
-        echo "<ul class=\"nav\">\n";
-        // If the user has asset management permissions
-        if (isset($_SESSION["asset"]) && $_SESSION["asset"] == "1")
-        {
-            //echo ($active == "AssetManagement" ? "<li class=\"active\">\n" : "<li>\n");
-            //echo "<a href=\"assets/index.php\">" . $escaper->escapeHtml($lang['AssetManagement']) . "</a>\n";
-            //echo "</li>\n";
-        }
-
-        // If the user has assessments permissions
-        if (isset($_SESSION["assessments"]) && $_SESSION["assessments"] == "1")
-        {
-            //echo ($active == "Assessments" ? "<li class=\"active\">\n" : "<li>\n");
-            //echo "<a href=\"assessments/index.php\">" . $escaper->escapeHtml($lang['Assessments']) . "</a>\n";
-            //echo "</li>\n";
-        }
-
-        // echo "<li>\n";
-        // echo "<a href=\"reports/index.php\">" . $escaper->escapeHtml($lang['Reporting']) . "</a>\n";
-        // echo "</li>\n";
-
-        // If the user is logged in as an administrator
-        if (isset($_SESSION["admin"]) && $_SESSION["admin"] == "1")
-        {
-            //echo ($active == "Configure" ? "<li class=\"active\">\n" : "<li>\n");
-            //echo "<a href=\"admin/index.php\">". $escaper->escapeHtml($lang['Configure']) ."</a>\n";
-            //echo "</li>\n";
-        }
-
-        echo "</ul>\n";
-        echo "</div>\n";
-
-        // If the user is logged in
-        if (isset($_SESSION["access"]) && $_SESSION["access"] == "granted")
-        {
-            // Show the user profile menu
-            echo "<div class=\"btn-group pull-right\">\n";
-            echo "<a class=\"btn dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\">" . $escaper->escapeHtml($_SESSION['name']) . "<span class=\"caret\"></span></a>\n";
-            echo "<ul class=\"dropdown-menu\">\n";
-            echo "<li>\n";
-            echo "<a href=\"account/profile.php\">". $escaper->escapeHtml($lang['MyProfile']) ."</a>\n";
-            echo "</li>\n";
-            echo "<li>\n";
-            echo "<a href=\"logout.php\">". $escaper->escapeHtml($lang['Logout']) ."</a>\n";
-            echo "</li>\n";
-            echo "</ul>\n";
-            echo "</div>\n";
-
-        }
+        echo "<a class=\"navbar-brand\" href=\"https://www.simplerisk.com/\"><img src='images/logo@2x.png' alt='SimpleRisk Logo' /></a>\n";
     }
     // If the page is in another sub-directory
     else
-    {
-        echo "<header class=\"l-header\">\n";
-        echo "<div class=\"navbar\">\n";
-        echo "<div class=\"navbar-inner\">\n";
-        echo "<div class=\"container-fluid\">\n";
-        echo "<a class=\"brand\" href=\"https://www.simplerisk.com/\"><img src='../images/logo@2x.png' alt='SimpleRisk Logo' /></a>\n";
-        echo "<div class=\"navbar-content\">\n";
-        echo "<ul class=\"nav\">\n";
-// echo ($active == "Home" ? "<li class=\"active\">\n" : "<li>\n");
-// echo "<a href=\"../index.php\">" . $escaper->escapeHtml($lang['Home']) . "</a>\n";
-// echo "</li>\n";
-
+    {       
+        echo "<a class=\"navbar-brand\" href=\"https://www.simplerisk.com\"><img src=\"../images/logo@2x.png\" alt=\"Simplerisk Logo\" /></a>\n";
+        echo '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>';
+        echo "<ul class=\"navbar-nav\">\n";
+        
         // If the user has governance permissions
         if (check_permission_governance())
         {
-            echo ($active == "Governance" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"../governance/index.php\">" . $escaper->escapeHtml($lang['Governance']) . "</a>\n";
+            echo "<li class=\"nav-item\">\n";
+            echo "<a class=\"nav-link" . ($active == "Governance" ? " active" : ""). "\" href=\"../governance/index.php\">" . $escaper->escapeHtml($lang['Governance']) . "</a>\n";
             echo "</li>\n";
         }
 
         // If the user has risk management permissions
         if (check_permission_riskmanagement())
         {
-            echo ($active == "RiskManagement" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"../management/index.php\">" . $escaper->escapeHtml($lang['RiskManagement']) . "</a>\n";
+            echo "<li class=\"nav-item\">\n";
+            echo "<a class=\"nav-link" . ($active == "RiskManagement" ? " active" : ""). "\" href=\"../management/index.php\">" . $escaper->escapeHtml($lang['RiskManagement']) . "</a>\n";            
             echo "</li>\n";
         }
 
         // If the user has compliance permissions
         if (check_permission_compliance())
         {
-            echo ($active == "Compliance" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"../compliance/index.php\">" . $escaper->escapeHtml($lang['Compliance']) . "</a>\n";
+            echo "<li class=\"nav-item\">\n";
+            echo "<a class=\"nav-link" . ($active == "Compliance" ? " active" : ""). "\" href=\"../compliance/index.php\">" . $escaper->escapeHtml($lang['Compliance']) . "</a>\n";            
             echo "</li>\n";
         }
 
         // If the user has asset management permissions
         if (isset($_SESSION["asset"]) && $_SESSION["asset"] == "1")
         {
-            echo ($active == "AssetManagement" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"../assets/index.php\">" . $escaper->escapeHtml($lang['AssetManagement']) . "</a>\n";
+            echo "<li class=\"nav-item\">\n";
+            echo "<a class=\"nav-link" . ($active == "AssetManagement" ? " active" : ""). "\" href=\"../assets/index.php\">" . $escaper->escapeHtml($lang['AssetManagement']) . "</a>\n";            
             echo "</li>\n";
         }
 
         // If the user has assessments permissions
         if (isset($_SESSION["assessments"]) && $_SESSION["assessments"] == "1")
         {
-            echo ($active == "Assessments" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"../assessments/index.php\">" . $escaper->escapeHtml($lang['Assessments']) . "</a>\n";
+            echo "<li class=\"nav-item\">\n";
+            echo "<a class=\"nav-link" . ($active == "Assessments" ? " active" : ""). "\" href=\"../assessments/index.php\">" . $escaper->escapeHtml($lang['Assessments']) . "</a>\n";            
             echo "</li>\n";
         }
 
-        echo ($active == "Reporting" ? "<li class=\"active\">\n" : "<li>\n");
-        echo "<a href=\"../reports/index.php\">" . $escaper->escapeHtml($lang['Reporting']) . "</a>\n";
+        echo "<li class=\"nav-item\">\n";
+        echo "<a class=\"nav-link" . ($active == "Reporting" ? " active" : ""). "\" href=\"../reports/index.php\">" . $escaper->escapeHtml($lang['Reporting']) . "</a>\n";            
         echo "</li>\n";
 
         // If the user is logged in as an administrator
         if (isset($_SESSION["admin"]) && $_SESSION["admin"] == "1")
         {
-            echo ($active == "Configure" ? "<li class=\"active\">\n" : "<li>\n");
-            echo "<a href=\"../admin/index.php\">". $escaper->escapeHtml($lang['Configure']) ."</a>\n";
+            echo "<li class=\"nav-item\">\n";
+            echo "<a class=\"nav-link" . ($active == "Configure" ? " active" : ""). "\" href=\"../admin/index.php\">" . $escaper->escapeHtml($lang['Configure']) . "</a>\n";            
             echo "</li>\n";
         }
 
         echo "</ul>\n";
-        echo "</div>\n";
-
-
+     
         // If the user is logged in
         if (isset($_SESSION["access"]) && $_SESSION["access"] == "granted")
         {
             // Show the user profile menu
-            echo "<div class=\"pull-right user--info\">\n";
-            echo "<a class=\"dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\">" . $escaper->escapeHtml($_SESSION['name']) . "<span class=\"caret\"></span></a>\n";
-            echo "<ul class=\"dropdown-menu\">\n";
-            echo "<li>\n";
+            echo "<a class=\"dropdown-toggle\" id=\"dropdownUserInfo\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\" href=\"#\">" . $escaper->escapeHtml($_SESSION['name']) . "</a>\n";
+            echo "<div class=\"dropdown-menu\" aria-labelledby=\"dropdownUserInfo\">\n";
             echo "<a href=\"../account/profile.php\">". $escaper->escapeHtml($lang['MyProfile']) ."</a>\n";
-            echo "</li>\n";
-            echo "<li>\n";
             echo "<a href=\"../logout.php\">". $escaper->escapeHtml($lang['Logout']) ."</a>\n";
-            echo "</li>\n";
-            echo "</ul>\n";
             echo "</div>\n";
         }
         
-        if ($active != "Home"){
-            echo "<div class=\"pull-right help\">\n";
+        if ($active != "Home") {
+            
             echo "<a class=\"dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\"><img src=\"../images/helpicon-top.png\"><span class=\"caret\"></span></a>\n";
             echo "<ul class=\"dropdown-menu\">\n";
             echo "<li>\n";
@@ -3781,11 +3714,7 @@ function view_top_menu($active)
             }
         }
     }
-
-    echo "</div>\n";
-    echo "</div>\n";
-    echo "</div>\n";
-    echo "</header>\n";
+    echo "</nav>\n";   
 }
 
 /*********************************

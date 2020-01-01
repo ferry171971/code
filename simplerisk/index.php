@@ -182,6 +182,7 @@ if (isset($_SESSION["access"]) && ($_SESSION["access"] == "duo"))
   <link rel="stylesheet" href="css/theme.css">
 
   <script src="js/jquery.min.js"></script>
+  <script src="js/popper.min.js"></script>
   
   <?php
       setup_alert_requirements();

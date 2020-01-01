@@ -472,6 +472,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
     <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>
@@ -558,11 +559,11 @@
     get_alert();
 ?>
     <div class="container-fluid">
-      <div class="row-fluid">
-        <div class="span3">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
           <?php view_configure_menu("Settings"); ?>
         </div>
-        <div class="span9">
+        <div class="col-lg-9 col-md-9 col-sm-9">
           <div class="wrap">
             <ul class="tabs group">
               <li><a class="active" href="#/general"><?php echo $escaper->escapeHtml($lang['General']); ?></a></li>

@@ -79,6 +79,7 @@ $pie_location_array = get_pie_array("location", $teams);
 
 <head>
   <script src="../js/jquery.min.js"></script>
+  <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
   <script src="../js/bootstrap-multiselect.js"></script>
   <script src="../js/sorttable.js"></script>

@@ -17,9 +17,9 @@ button.multiselect {
     height: 32px;
 }
 
-.container-fluid{
-    > .row-fluid{
-        > .span9{
+.container-fluid {
+    > .row {
+        > .col-md-9 {
             position: relative;
             margin-top: 32px;
             .content-navbar-container{

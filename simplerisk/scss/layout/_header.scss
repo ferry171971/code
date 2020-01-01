@@ -12,7 +12,7 @@
 		content: "";
 	}
 
-	.navbar .brand {
+	.navbar-brand {
 	    padding: 11px 20px 10px;
 	    margin: 0px;
 	    color: #777777;
@@ -29,7 +29,7 @@
 			}
 	}
 
-	.navbar .nav > li > a {
+	.navbar-nav > li > a {
     float: none;
     padding: 10px 20px 20px 10px;
     color: #fff;
@@ -40,10 +40,10 @@
 		@extend .animation;
 	}
 
-	.navbar .nav > .active > a,
-	.navbar .nav > .active > a:hover,
-	.navbar .nav > li > a:hover,
-	.navbar .nav > .active > a:focus {
+	.navbar-nav > li > .active,
+	.navbar-nav > li > a.active:hover,
+	.navbar-nav > li > a:hover,
+	.navbar-nav > li > a.active:focus {
         color: $color-3 !important;
         text-decoration: none;
         background-color: transparent;
@@ -52,30 +52,27 @@
         box-shadow: none;
 	}
 
-	.navbar .nav {
+	.navbar-nav {
         margin: 20px 0px 0 50px;
 	}
 
-	.navbar .nav > .active > a{
+	.navbar-nav > li > a.active {
 		background-image: url('../images/arrow-top.png');
 		background-repeat: no-repeat;
 		background-position: 50% bottom;
 	}
     
     @media only screen and (max-width : 1300px) {
-        .navbar .nav > li > a {
+        .navbar-nav > li > a {
             padding-right: 9px;
         }
         
-        .navbar .nav {
+        .navbar-nav {
             margin-left: 30px;
         }
     }
 
-}
-
-.navbar-inner{
-	height: 75px;
+	max-height: 75px;
 	background-color: $color-1;
 	color: #fff;
 	padding: 0px;
@@ -84,12 +81,9 @@
 	background-image: none;
 	border-radius: 0px;
 	text-shadow: none;
-	border-bottom: 5px solid $color-2;
-    > .container-fluid{
-        max-height: 75px;
-    }
+    border-bottom: 5px solid $color-2;
+    
 }
-
 
 .user--info{
 	margin: 29px 0px 20px 5px;

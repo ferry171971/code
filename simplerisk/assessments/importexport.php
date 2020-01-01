@@ -79,6 +79,7 @@ if(process_assessment_import()){
 
   <head>
     <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="../js/sorttable.js"></script>
     <title>SimpleRisk: Enterprise Risk Management Simplified</title>

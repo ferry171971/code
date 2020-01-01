@@ -67,6 +67,7 @@ $id = $_GET['id'];
 
 <head>
   <script src="../js/jquery.min.js"></script>
+  <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
   <title>SimpleRisk: Enterprise Risk Management Simplified</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">

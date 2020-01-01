@@ -55,6 +55,7 @@ if (!isset($_SESSION["access"]) || $_SESSION["access"] != "granted")
 
 <head>
   <script src="../js/jquery.min.js"></script>
+  <script src="../js/popper.min.js"></script>
   <script src="../js/bootstrap.min.js"></script>
   <script src="../js/sorttable.js"></script>
   <script src="../js/obsolete.js"></script>

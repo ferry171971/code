@@ -57,6 +57,7 @@ $risk_appetite = get_setting("risk_appetite", 0);
 <html lang="<?php echo $escaper->escapehtml($_SESSION['lang']); ?>" xml:lang="<?php echo $escaper->escapeHtml($_SESSION['lang']); ?>">
     <head>
         <script src="../js/jquery.min.js"></script>
+        <script src="../js/popper.min.js"></script>
         <script src="../js/jquery.easyui.min.js"></script>
         <script src="../js/jquery-ui.min.js"></script>
         <script src="../js/bootstrap.min.js"></script>

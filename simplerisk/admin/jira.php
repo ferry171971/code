@@ -127,6 +127,7 @@
     <head>
         <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
         <script src="../js/jquery.min.js"></script>
+        <script src="../js/popper.min.js"></script>
         <script src="../js/bootstrap.min.js"></script>
         <title>SimpleRisk: Enterprise Risk Management Simplified</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">

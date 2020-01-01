@@ -159,6 +159,7 @@ if (isset($_POST['delete_document']))
 
 <head>
   <script src="../js/jquery.min.js"></script>
+  <script src="../js/popper.min.js"></script>
   <script src="../js/jquery.easyui.min.js"></script>
   <script src="../js/jquery-ui.min.js"></script>
   <script src="../js/jquery.draggable.js"></script>

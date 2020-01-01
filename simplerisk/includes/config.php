@@ -16,7 +16,7 @@ define('DB_USERNAME', 'simplerisk');
 define('DB_PASSWORD', 'simplerisk');
 
 // MySQL Database Name
-define('DB_DATABASE', 'simplerisk');
+define('DB_DATABASE', 'simplerisk_master');
 
 // Use database for sessions
 define('USE_DATABASE_FOR_SESSIONS', 'true');
