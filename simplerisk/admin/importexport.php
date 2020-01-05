@@ -160,7 +160,7 @@
                 // If the extra is not restricted based on the install type
                 if (!restricted_extra("importexport"))
                 {
-                    echo "<div class=\"hero-unit\">\n";
+                    echo "<div class=\"jumbotron\">\n";
                     echo "<h4>" . $escaper->escapeHtml($lang['ImportExportExtra']) . "</h4>\n";
                     echo "<form name=\"activate\" method=\"post\" action=\"\">\n";
                     echo "<input type=\"submit\" value=\"" . $escaper->escapeHtml($lang['Activate']) . "\" name=\"activate\" /><br />";
@@ -191,49 +191,46 @@
 
 <!doctype html>
 <html>
-
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/settings_tabs.css">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="../js/sorttable.js"></script>
-    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-    <link rel="stylesheet" href="../css/bootstrap.css">
-    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-
-    <link rel="stylesheet" href="../css/divshot-util.css">
-    <link rel="stylesheet" href="../css/divshot-canvas.css">
-    <link rel="stylesheet" href="../css/display.css">
-
-    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="../css/theme.css">
-    <link rel="stylesheet" href="../css/settings_tabs.css">
     <?php
         setup_alert_requirements("..");
     ?>     
   </head>
-
   <body>
-
-<?php
-    view_top_menu("Configure");
-?>
+    <?php
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();  
+    ?>
     <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="span3">
-                <?php view_configure_menu("ImportExport"); ?>
-            </div>
-            <div class="span9">
-                <div class="row-fluid">
-                    <div class="span12">
-                        <?php display(); ?>
-                    </div>
-                </div>
-            </div>
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
+          <?php view_configure_menu("ImportExport"); ?>
         </div>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <?php display(); ?>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <input type="hidden" id="lang_SelectMappingToRemove" value="<?php echo $escaper->escapeHtml($lang["SelectMappingToRemove"]); ?>">
     <script type="">
@@ -274,10 +271,5 @@
 
         <?php prevent_form_double_submit_script(); ?>
     </script>
-<?php
-    // Get any alert messages
-    get_alert();
-?>
   </body>
-
 </html>

@@ -103,15 +103,11 @@ if (isset($_POST['change_password']))
 
 <!doctype html>
 <html>
-
-<head>
+  <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
-    <script src="../js/jquery.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/bootstrap-responsive.css">
     <link rel="stylesheet" href="../css/divshot-util.css">
@@ -119,47 +115,45 @@ if (isset($_POST['change_password']))
     <link rel="stylesheet" href="../css/display.css">
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>   
     <?php
         setup_alert_requirements("..");
     ?>    
-</head>
-
-<body>
-
-
+  </head>
+  <body>
     <?php
-        view_top_menu("Configure");
-
-        // Get any alert messages
-        get_alert();
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
     ?>
     <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="span4 offset4">
-                <div class="well">
-                    <?php
-                        //if (isset($_SESSION['user_type']) && $_SESSION['user_type'] != "ldap")
-                        //{
-                            echo "<div class=\"hero-unit\">\n";
-                            echo "<form name=\"change_password\" method=\"post\" action=\"\">\n";
-                            echo "<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n";
-                            echo "<tr><td colspan=\"2\"><h4>" . $escaper->escapeHtml($lang['ChangePassword']) . "</h4></td><tr>\n";
-                            echo "<tr><td>" . $escaper->escapeHtml($lang['CurrentPassword']) . ":&nbsp</td><td><input maxlength=\"100\" name=\"current_pass\" id=\"current_pass\" class=\"input-medium\" type=\"password\" autocomplete=\"off\" /></td></tr>\n";
-                            echo "<tr><td>" . $escaper->escapeHtml($lang['NewPassword']) . ":&nbsp</td><td><input maxlength=\"100\" name=\"new_pass\" id=\"new_pass\" class=\"input-medium\" type=\"password\" autocomplete=\"off\" /></td></tr>\n";
-                            echo "<tr><td>" . $escaper->escapeHtml($lang['ConfirmPassword']) . ":&nbsp;</td><td><input maxlength=\"100\" name=\"confirm_pass\" id=\"confirm_pass\" class=\"input-medium\" type=\"password\" autocomplete=\"off\" /></td></tr>\n";
-                            echo "</table>\n";
-                                echo "<div class=\"form-actions\">\n";
-                                    echo "<button type=\"submit\" name=\"change_password\" class=\"btn btn-primary\">" . $escaper->escapeHtml($lang['Submit']) . "</button>\n";
-                                    echo "<input class=\"btn\" value=\"" . $escaper->escapeHtml($lang['Reset']) . "\" type=\"reset\">\n";
-                                    echo "</div>\n";
-                                echo "</form>\n";
-                            echo "</div>\n";
-                    //    }
-                    ?>
-                </div>
-            </div>
+      <div class="row">
+        <div class="col-lg-4 col-md-4 col-sm-4 offset-lg-4 offset-md-4 offset-sm-4">
+          <div class="card">
+          <?php
+            //if (isset($_SESSION['user_type']) && $_SESSION['user_type'] != "ldap")
+            //{
+            echo "<div class=\"jumbotron\">\n";
+            echo "<form name=\"change_password\" method=\"post\" action=\"\">\n";
+            echo "<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n";
+            echo "<tr><td colspan=\"2\"><h4>" . $escaper->escapeHtml($lang['ChangePassword']) . "</h4></td><tr>\n";
+            echo "<tr><td>" . $escaper->escapeHtml($lang['CurrentPassword']) . ":&nbsp</td><td><input maxlength=\"100\" name=\"current_pass\" id=\"current_pass\" class=\"input-medium\" type=\"password\" autocomplete=\"off\" /></td></tr>\n";
+            echo "<tr><td>" . $escaper->escapeHtml($lang['NewPassword']) . ":&nbsp</td><td><input maxlength=\"100\" name=\"new_pass\" id=\"new_pass\" class=\"input-medium\" type=\"password\" autocomplete=\"off\" /></td></tr>\n";
+            echo "<tr><td>" . $escaper->escapeHtml($lang['ConfirmPassword']) . ":&nbsp;</td><td><input maxlength=\"100\" name=\"confirm_pass\" id=\"confirm_pass\" class=\"input-medium\" type=\"password\" autocomplete=\"off\" /></td></tr>\n";
+            echo "</table>\n";
+            echo "<div class=\"form-actions\">\n";
+            echo "<button type=\"submit\" name=\"change_password\" class=\"btn btn-primary\">" . $escaper->escapeHtml($lang['Submit']) . "</button>\n";
+            echo "<input class=\"btn\" value=\"" . $escaper->escapeHtml($lang['Reset']) . "\" type=\"reset\">\n";
+            echo "</div>\n";
+            echo "</form>\n";
+            echo "</div>\n";
+            //    }
+          ?>
+          </div>
         </div>
+      </div>
     </div>
-</body>
-
+  </body>
 </html>

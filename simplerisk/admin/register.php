@@ -260,26 +260,22 @@
 
 <!doctype html>
 <html>
-
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
-    <script src="../js/jquery.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/bootstrap-responsive.css">
     <link rel="stylesheet" href="../css/paypal.css">
-
     <link rel="stylesheet" href="../css/divshot-util.css">
     <link rel="stylesheet" href="../css/divshot-canvas.css">
     <link rel="stylesheet" href="../css/display.css">
-
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
-    
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
     <?php
         setup_alert_requirements("..");
     ?>
@@ -321,72 +317,65 @@
         }
     </style>
   </head>
-
   <body>
-
-<?php
-	view_top_menu("Configure");
-
-	// Get any alert messages
-	get_alert();
-?>
-
+    <?php
+	  view_top_menu("Configure");
+      // Get any alert messages
+	  get_alert();
+    ?>
     <div class="container-fluid">
-      <div class="row-fluid">
-        <div class="span3">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
           <?php view_configure_menu("Register"); ?>
         </div>
-        <div class="span9">
-            <div class="row-fluid">
-                <div class="span12">
-                    <div class="hero-unit">
-                        <p><h4><?php echo $escaper->escapeHtml($lang['RegisterSimpleRisk']); ?></h4></p>
-                        <p><?php echo $escaper->escapeHtml($lang['RegistrationText']); ?></p>
-                        <?php
-                            if ($registration_notice === true)
-                            {
-                                echo "<p><form name=\"no_message\" method=\"post\" action=\"\"><input type=\"submit\" name=\"disable_registration_notice\" value=\"" . $escaper->escapeHtml($lang['DisableRegistrationNotice']) . "\" /></form></p>\n";
-                            }
-                        ?>
-                    </div>
-                </div>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="jumbotron">
+                <p><h4><?php echo $escaper->escapeHtml($lang['RegisterSimpleRisk']); ?></h4></p>
+                <p><?php echo $escaper->escapeHtml($lang['RegistrationText']); ?></p>
+                <?php
+                  if ($registration_notice === true) {
+                    echo "<p><form name=\"no_message\" method=\"post\" action=\"\"><input type=\"submit\" name=\"disable_registration_notice\" value=\"" . $escaper->escapeHtml($lang['DisableRegistrationNotice']) . "\" /></form></p>\n";
+                  }
+                ?>
+              </div>
             </div>
-            <div class="row-fluid">
-                <div class="span12">
-                    <div class="hero-unit">
-                        <font size="3"><b>Instance ID:</b>&nbsp;<?php echo $escaper->escapeHtml(get_setting("instance_id")); ?></font>
-                    </div>
-                </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="jumbotron">
+                <font size="3"><b>Instance ID:</b>&nbsp;<?php echo $escaper->escapeHtml(get_setting("instance_id")); ?></font>
+              </div>
             </div>
-          
-            <?php if(!is_process("mysqldump")){ ?>
-                <div class="row-fluid">
-                    <div class="span12">
-                        <div class="hero-unit">
-                            <p></p>
-                            <h4>Set Mysql Service Path</h4>
-                            <form method="POST" action="">
-                                <table name="mail" id="mail" border="0" width="100%">
-                                    <tbody>
-                                        <tr>
-                                            <td width="140px">Mysqldump Path: &nbsp;</td>
-                                            <td><input  name="mysqldump_path" value="<?php echo $escaper->escapeHtml(get_setting('mysqldump_path')); ?>" type="text"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <input value="Submit" name="submit_mysqlpath" type="submit">
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            <?php } ?>
-            
-            <div class="row-fluid">
-                <div id="register-panel" class="span6">
-                  <div class="hero-unit">
-                    <p><h4><?php echo $escaper->escapeHtml($lang['RegistrationInformation']); ?></h4></p>
-                    <form name="register" method="post" action="">
-		                <?php
+          </div>
+        <?php if(!is_process("mysqldump")){ ?>
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="jumbotron">
+                <p></p>
+                <h4>Set Mysql Service Path</h4>
+                <form method="POST" action="">
+                  <table name="mail" id="mail" border="0" width="100%">
+                    <tbody>
+                      <tr>
+                        <td width="140px">Mysqldump Path: &nbsp;</td>
+                        <td><input  name="mysqldump_path" value="<?php echo $escaper->escapeHtml(get_setting('mysqldump_path')); ?>" type="text"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <input value="Submit" name="submit_mysqlpath" type="submit">
+                </form>
+              </div>
+            </div>
+          </div>
+        <?php } ?>
+          <div class="row">
+            <div id="register-panel" class="col-lg-6 col-md-6 col-sm-6">
+              <div class="jumbotron">
+                <p><h4><?php echo $escaper->escapeHtml($lang['RegistrationInformation']); ?></h4></p>
+                <form name="register" method="post" action="">
+		          <?php
 			                // If the instance is not registered
 			                if (!$registered)
 			                {
@@ -409,52 +398,46 @@
 				                }
 			                }
 		                ?>
-                    </form>
-                  </div>
+                  </form>
                 </div>
-                <div id="upgrade-panel" class="span6">
-                    <div class="hero-unit">
-                        <p><h4><?php echo $escaper->escapeHtml($lang['UpgradeSimpleRisk']); ?></h4></p>
-                        <?php
-	                        // If the instance is not registered
-	                        if (!$registered)
-	                        {
-		                        echo "Please register in order to be able to use the easy upgrade feature.";
-	                        }
-	                        // The instance is registered
-	                        else
-	                        {
-		                        display_upgrade();
-	                        }
-                        ?>
-                    </div>
+              </div>
+              <div id="upgrade-panel" class="col-lg-6 col-md-6 col-sm-6">
+                <div class=jumbotron">
+                  <p><h4><?php echo $escaper->escapeHtml($lang['UpgradeSimpleRisk']); ?></h4></p>
+                  <?php
+	                // If the instance is not registered
+	                if (!$registered) {
+                      echo "Please register in order to be able to use the easy upgrade feature.";
+                    // The instance is registered
+	                } else {
+		              display_upgrade();
+	                }
+                  ?>
                 </div>
+              </div>
             </div>
-            <div class="row-fluid">
-                <div class="span12">
-                    <div class="hero-unit">
-                        <?php
-                            // If the instance is not registered
-                            if (!$registered)
-                            {
-                                echo "Please register in order to be able to use the easy upgrade feature.";
-                            }
-                            // The instance is registered
-                            else
-                            {
-                                display_upgrade_extras();
-                            }
-                        ?>
-                    </div>
+            <div class="row">
+              <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="jumbotron">
+                  <?php
+                    // If the instance is not registered
+                    if (!$registered) {
+                      echo "Please register in order to be able to use the easy upgrade feature.";
+                      // The instance is registered
+                    } else {
+                      display_upgrade_extras();
+                    }
+                  ?>
                 </div>
+              </div>
             </div>
+          </div>
         </div>
       </div>
-    </div>
-        <script type="text/javascript">
-            var last_response_len = false;
-            var $progress = $('.progress-window');
-            $('#app_upgrade').click(function() {
+      <script type="text/javascript">
+        var last_response_len = false;
+        var $progress = $('.progress-window');
+        $('#app_upgrade').click(function() {
                 $progress.html("");
                 $('.progress-wrapper').show();
                 $('#upgrade-panel .hero-unit').height($('#register-panel .hero-unit').height());
@@ -516,7 +499,7 @@
                 
             });
 
-        </script>   
+    </script>   
   </body>
 
 </html>

@@ -83,66 +83,54 @@
 
 <!doctype html>
 <html>
-
-<head>
-<meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
-<script src="../js/jquery.min.js"></script>
-<script src="../js/popper.min.js"></script>
-<script src="../js/bootstrap.min.js"></script>
-<title>SimpleRisk: Enterprise Risk Management Simplified</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-<link rel="stylesheet" href="../css/bootstrap.css">
-<link rel="stylesheet" href="../css/bootstrap-responsive.css">
-
-<link rel="stylesheet" href="../css/divshot-util.css">
-<link rel="stylesheet" href="../css/divshot-canvas.css">
-<link rel="stylesheet" href="../css/display.css">
-
-<link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-<link rel="stylesheet" href="../css/theme.css">
-
-<?php
-    setup_alert_requirements("..");
-?>    
-</head>
-
-<body>
-
-<?php
-view_top_menu("Configure");
-
-// Get any alert messages
-get_alert();
-?>
-<div class="container-fluid">
-  <div class="row-fluid">
-    <div class="span3">
-      <?php view_configure_menu("ConfigureReviewSettings"); ?>
-    </div>
-    <div class="span9">
-      <div class="row-fluid">
-        <div class="span12">
-          <div class="hero-unit">
-            <form name="review_settings" method="post" action="">
-
-        <?php $review_levels = get_review_levels(); ?>
-
-    <p><?php echo $escaper->escapeHtml($lang['IWantToReviewVeryHighRiskEvery']); ?> <input type="text" name="veryhigh" size="2" value="<?php echo $escaper->escapeHtml($review_levels[0]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
-            <p><?php echo $escaper->escapeHtml($lang['IWantToReviewHighRiskEvery']); ?> <input type="text" name="high" size="2" value="<?php echo $escaper->escapeHtml($review_levels[1]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
-            <p><?php echo $escaper->escapeHtml($lang['IWantToReviewMediumRiskEvery']); ?> <input type="text" name="medium" size="2" value="<?php echo $escaper->escapeHtml($review_levels[2]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
-            <p><?php echo $escaper->escapeHtml($lang['IWantToReviewLowRiskEvery']); ?> <input type="text" name="low" size="2" value="<?php echo $escaper->escapeHtml($review_levels[3]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
-    <p><?php echo $escaper->escapeHtml($lang['IWantToReviewInsignificantRiskEvery']); ?> <input type="text" name="insignificant" size="2" value="<?php echo $escaper->escapeHtml($review_levels[4]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
-
-            <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_review_settings" />
-
-            </form>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css"> 
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <?php
+      setup_alert_requirements("..");
+    ?>    
+  </head>
+  <body>
+    <?php
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
+    ?>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
+          <?php view_configure_menu("ConfigureReviewSettings"); ?>
+        </div>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="jumbotron">
+                <form name="review_settings" method="post" action="">
+                <?php $review_levels = get_review_levels(); ?>
+                  <p><?php echo $escaper->escapeHtml($lang['IWantToReviewVeryHighRiskEvery']); ?> <input type="text" name="veryhigh" size="2" value="<?php echo $escaper->escapeHtml($review_levels[0]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
+                  <p><?php echo $escaper->escapeHtml($lang['IWantToReviewHighRiskEvery']); ?> <input type="text" name="high" size="2" value="<?php echo $escaper->escapeHtml($review_levels[1]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
+                  <p><?php echo $escaper->escapeHtml($lang['IWantToReviewMediumRiskEvery']); ?> <input type="text" name="medium" size="2" value="<?php echo $escaper->escapeHtml($review_levels[2]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
+                  <p><?php echo $escaper->escapeHtml($lang['IWantToReviewLowRiskEvery']); ?> <input type="text" name="low" size="2" value="<?php echo $escaper->escapeHtml($review_levels[3]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
+                  <p><?php echo $escaper->escapeHtml($lang['IWantToReviewInsignificantRiskEvery']); ?> <input type="text" name="insignificant" size="2" value="<?php echo $escaper->escapeHtml($review_levels[4]['value']); ?>" /> <?php echo $escaper->escapeHtml($lang['days']); ?>.</p>
+                  <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_review_settings" />
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-</body>
-
+  </body>
 </html>

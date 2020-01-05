@@ -167,86 +167,80 @@
 
 <!doctype html>
 <html>
-
-    <head>
-        <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-        <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-
-        <script src="../js/jquery.min.js"></script>
-        <script src="../js/popper.min.js"></script>
-        <script src="../js/bootstrap.min.js"></script>
-        <script language="javascript" src="../js/asset_valuation.js" type="text/javascript"></script>
-
-        <link rel="stylesheet" href="../css/bootstrap.css">
-        <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-        <link rel="stylesheet" href="../css/divshot-util.css">
-        <link rel="stylesheet" href="../css/divshot-canvas.css">
-        <link rel="stylesheet" href="../css/display.css">
-        <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-        <link rel="stylesheet" href="../css/theme.css">
-
-        <?php $url = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"5px\" y=\"20px\" font-size=\"15\" stroke=\"green\" fill=\"green\">" . get_setting("currency") . "</text></svg>"; ?>
-        <style type="text/css">
-            #dollarsign {
-                background-image: url('data:image/svg+xml;base64,<?php echo base64_encode($url); ?>');
-                background-repeat: no-repeat;
-                background-color: white;
-                background-position: left;
-                padding-left: 35px;
-            }
-        </style>
-
-        <?php
-            setup_alert_requirements("..");
-        ?>
-    </head>
-    <body>
-        <?php
-        view_top_menu("Configure");
-
-        // Get any alert messages
-        get_alert();
-        ?>
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="span3">
-                    <?php view_configure_menu("AssetValuation"); ?>
-                </div>
-                <div class="span9">
-                    <div class="row-fluid">
-                        <div class="span12">
-                            <div class="hero-unit">
-                                <form name="automatic" method="post" action="">
-                                    <h4><?php echo $escaper->escapeHtml($lang['AutomaticAssetValuation']); ?>:</h4>
-                                    <table border="0" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td><?php echo $escaper->escapeHtml($lang['MinimumValue']); ?>:&nbsp;</td>
-                                            <td><input id="dollarsign" type="number" name="min_value" min="0" size="20" value="<?php echo asset_min_value(); ?>" /></td>
-                                        </tr>
-                                        <tr>
-                                            <td><?php echo $escaper->escapeHtml($lang['MaximumValue']); ?>:&nbsp;</td>
-                                            <td><input id="dollarsign" type="number" name="max_value" size="20" value="<?php echo asset_max_value(); ?>" /></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2"><input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_auto_value" /></td>
-                                        </tr>
-                                    </table>
-                                </form>
-                            </div>
-                            <div class="hero-unit">
-                                <form name="manual" method="post" action="">
-                                    <h4><?php echo $escaper->escapeHtml($lang['ManualAssetValuation']); ?>:</h4>
-                                    <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_manual_value" />
-                                    <?php display_asset_valuation_table(); ?>
-                                    <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_manual_value" />
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <?php $url = "<svg xmlns=\"http://www.w3.org/2000/svg\"><text x=\"5px\" y=\"20px\" font-size=\"15\" stroke=\"green\" fill=\"green\">" . get_setting("currency") . "</text></svg>"; ?>
+    <style type="text/css">
+      #dollarsign {
+        background-image: url('data:image/svg+xml;base64,<?php echo base64_encode($url); ?>');
+        background-repeat: no-repeat;
+        background-color: white;
+        background-position: left;
+        padding-left: 35px;
+      }
+    </style>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script language="javascript" src="../js/asset_valuation.js" type="text/javascript"></script>    
+    <?php
+      setup_alert_requirements("..");
+    ?>
+  </head>
+  <body>
+    <?php
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
+    ?>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
+          <?php view_configure_menu("AssetValuation"); ?>
         </div>
-    </body>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="jumbotron">
+                <form name="automatic" method="post" action="">
+                  <h4><?php echo $escaper->escapeHtml($lang['AutomaticAssetValuation']); ?>:</h4>
+                  <table border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td><?php echo $escaper->escapeHtml($lang['MinimumValue']); ?>:&nbsp;</td>
+                      <td><input id="dollarsign" type="number" name="min_value" min="0" size="20" value="<?php echo asset_min_value(); ?>" /></td>
+                    </tr>
+                    <tr>
+                      <td><?php echo $escaper->escapeHtml($lang['MaximumValue']); ?>:&nbsp;</td>
+                      <td><input id="dollarsign" type="number" name="max_value" size="20" value="<?php echo asset_max_value(); ?>" /></td>
+                    </tr>
+                    <tr>
+                      <td colspan="2"><input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_auto_value" /></td>
+                    </tr>
+                  </table>
+                </form>
+              </div>
+              <div class="jumbotron">
+                <form name="manual" method="post" action="">
+                  <h4><?php echo $escaper->escapeHtml($lang['ManualAssetValuation']); ?>:</h4>
+                  <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_manual_value" />
+                  <?php display_asset_valuation_table(); ?>
+                  <input type="submit" value="<?php echo $escaper->escapeHtml($lang['Update']); ?>" name="update_manual_value" />
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

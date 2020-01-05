@@ -293,20 +293,24 @@
 
 <!doctype html>
 <html>
-
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../css/bootstrap-multiselect.css">
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/popper.min.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="../js/bootstrap-multiselect.js"></script>
-    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-    <link rel="stylesheet" href="../css/bootstrap.css">
-    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-    <link rel="stylesheet" href="../css/bootstrap-multiselect.css">
     <script type="text/javascript">
         $(function(){
             $("#team").multiselect({
@@ -314,25 +318,14 @@
                 includeSelectAllOption: true
             });
         });
-    </script>
-
-    <link rel="stylesheet" href="../css/divshot-util.css">
-    <link rel="stylesheet" href="../css/divshot-canvas.css">
-    <link rel="stylesheet" href="../css/display.css">
-
-    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="../css/theme.css">
-    
+    </script>    
     <?php
-        setup_alert_requirements("..");
-    ?>    
-    
+      setup_alert_requirements("..");
+    ?>   
   </head>
-
   <body>
-
-<script type="text/javascript">
-    $(document).ready(function(){
+    <script type="text/javascript">
+      $(document).ready(function(){
         // role event
         $("#role").change(function(){
             setUserResponsibilitesByRole();
@@ -491,78 +484,74 @@
           document.getElementsByName("admin")[0].checked = false;
         }
     }
-</script>
-
+    </script>
     <?php
-        view_top_menu("Configure");
-
-        // Get any alert messages
-        get_alert();
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
     ?>
     <div class="container-fluid">
-        <div class="row-fluid">
-            <div class="span3">
-                <?php view_configure_menu("UserManagement"); ?>
-            </div>
-            <div class="span9">
-                <div class="row-fluid">
-                    <div class="span12">
-                        <div class="hero-unit">
-                            <form name="update_user" method="post" action="">
-                                <input name="user" type="hidden" value="<?php echo $escaper->escapeHtml($user_id); ?>" />
-                                <table border="0" cellspacing="0" cellpadding="0">
-                                    <tr>
-                                        <td colspan="2"><h4>Update an Existing User:</h4></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2"><input class="hidden-checkbox" name="lockout" id="lockout" type="checkbox"<?php if ($lockout) echo " checked" ?> /> <label for="lockout">  &nbsp;&nbsp;&nbsp; <?php echo $lang['AccountLockedOut']; ?></label> </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2">                                
-                                            <input name="change_password" id="change_password" <?php if(isset($change_password) && $change_password == 1) echo "checked"; ?> class="hidden-checkbox" type="checkbox" value="1" />  <label for="change_password">  &nbsp;&nbsp;&nbsp; <?php echo $escaper->escapeHtml($lang['RequirePasswordChangeOnLogin']); ?> </label>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['Status']); ?>:&nbsp;</td>
-                                        <td><b><?php echo ($enabled == 1 ? $escaper->escapeHtml($lang['Enabled']) : $escaper->escapeHtml($lang['Disabled'])); ?></b></td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['Type']); ?>:&nbsp;</td>
-                                        <td>
-                                        <select name="type" id="select">
-                                        <option value="1"<?php echo ($type == "simplerisk" ? " selected" : ""); ?>>SimpleRisk</option>
-                                        <?php
-                                        // If the custom authentication extra is enabeld
-                                        if (custom_authentication_extra())
-                                        {
-                                            // Display the LDAP option
-                                            echo "<option value=\"2\"" . ($type == "ldap" ? " selected" : "") . ">LDAP</option>\n";
-
-                                            // Display the SAML option
-                                            echo "<option value=\"3\"" . ($type == "saml" ? " selected" : "") . ">SAML</option>\n";
-                                        }
-                                        ?>
-                                        </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['FullName']); ?>:&nbsp;</td>
-                                        <td><input name="name" type="text" maxlength="50" size="20" value="<?php echo $escaper->escapeHtml($name); ?>" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['EmailAddress']); ?>:&nbsp;</td>
-                                        <td><input name="email" type="email" maxlength="200" size="20" value="<?php echo $escaper->escapeHtml($email); ?>" /></td>
-                                        </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['Username']); ?>:&nbsp;</td>
-                                        <td><input style="cursor: default;" name="username" type="text" size="20" title="<?php echo $escaper->escapeHtml($username); ?>" disabled="disabled" value="<?php echo $escaper->escapeHtml($username); ?>" /></td>
-                                    </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['LastLogin']); ?>:&nbsp;</td>
-                                        <td><input style="cursor: default;" name="last_login" type="text" maxlength="20" size="20" title="<?php echo $escaper->escapeHtml($last_login); ?>" disabled="disabled" value="<?php echo $escaper->escapeHtml($last_login); ?>" /></td>
-                                        </tr>
-                                    <tr>
-                                        <td><?php echo $escaper->escapeHtml($lang['Language']); ?>:&nbsp;</td>
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
+          <?php view_configure_menu("UserManagement"); ?>
+        </div>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="jumbotron">
+                <form name="update_user" method="post" action="">
+                  <input name="user" type="hidden" value="<?php echo $escaper->escapeHtml($user_id); ?>" />
+                  <table border="0" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td colspan="2"><h4>Update an Existing User:</h4></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2"><input class="hidden-checkbox" name="lockout" id="lockout" type="checkbox"<?php if ($lockout) echo " checked" ?> /> <label for="lockout">  &nbsp;&nbsp;&nbsp; <?php echo $lang['AccountLockedOut']; ?></label> </td>
+                  </tr>
+                  <tr>
+                    <td colspan="2">                                
+                      <input name="change_password" id="change_password" <?php if(isset($change_password) && $change_password == 1) echo "checked"; ?> class="hidden-checkbox" type="checkbox" value="1" />  <label for="change_password">  &nbsp;&nbsp;&nbsp; <?php echo $escaper->escapeHtml($lang['RequirePasswordChangeOnLogin']); ?> </label>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['Status']); ?>:&nbsp;</td>
+                    <td><b><?php echo ($enabled == 1 ? $escaper->escapeHtml($lang['Enabled']) : $escaper->escapeHtml($lang['Disabled'])); ?></b></td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['Type']); ?>:&nbsp;</td>
+                    <td>
+                      <select name="type" id="select">
+                        <option value="1"<?php echo ($type == "simplerisk" ? " selected" : ""); ?>>SimpleRisk</option>
+                      <?php
+                        // If the custom authentication extra is enabeld
+                        if (custom_authentication_extra()) {
+                          // Display the LDAP option
+                          echo "<option value=\"2\"" . ($type == "ldap" ? " selected" : "") . ">LDAP</option>\n";
+                          // Display the SAML option
+                          echo "<option value=\"3\"" . ($type == "saml" ? " selected" : "") . ">SAML</option>\n";
+                        }
+                      ?>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['FullName']); ?>:&nbsp;</td>
+                    <td><input name="name" type="text" maxlength="50" size="20" value="<?php echo $escaper->escapeHtml($name); ?>" /></td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['EmailAddress']); ?>:&nbsp;</td>
+                    <td><input name="email" type="email" maxlength="200" size="20" value="<?php echo $escaper->escapeHtml($email); ?>" /></td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['Username']); ?>:&nbsp;</td>
+                    <td><input style="cursor: default;" name="username" type="text" size="20" title="<?php echo $escaper->escapeHtml($username); ?>" disabled="disabled" value="<?php echo $escaper->escapeHtml($username); ?>" /></td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['LastLogin']); ?>:&nbsp;</td>
+                    <td><input style="cursor: default;" name="last_login" type="text" maxlength="20" size="20" title="<?php echo $escaper->escapeHtml($last_login); ?>" disabled="disabled" value="<?php echo $escaper->escapeHtml($last_login); ?>" /></td>
+                  </tr>
+                  <tr>
+                    <td><?php echo $escaper->escapeHtml($lang['Language']); ?>:&nbsp;</td>
                                         <td><?php create_dropdown("languages", get_value_by_name("languages", $language)); ?></td>
                                     </tr>
                                 </table>
@@ -651,5 +640,4 @@
     </div>
     <?php display_set_default_date_format_script(); ?>
   </body>
-
 </html>

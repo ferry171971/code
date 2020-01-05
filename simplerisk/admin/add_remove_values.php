@@ -290,74 +290,65 @@
 
 <!doctype html>
 <html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <?php
+      setup_alert_requirements("..");
+    ?>
+  </head>
+  <body>
+    <?php
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
+    ?>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
+          <?php view_configure_menu("AddAndRemoveValues"); ?>
+        </div>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <b><?php echo $escaper->escapeHtml($lang['Select']) ?>: </b>
+            <select id="table-sections">
+              <?php
+                foreach($tableConfig as $table => $config) {
+                  echo "<option value='".$table."'>". $escaper->escapeHtml($lang[$config['headerKey']]) ."</option>\n";
+                }
+              ?>
+            </select>
+          </div>
+          <div class="row">
+            <div id="crud-wrapper" class="col-lg-12 col-md-12 col-sm-12">
+              <?php
+                $text_change = $escaper->escapeHtml($lang['Change']);
+                $text_to = $escaper->escapeHtml($lang['to']);
+                $text_update = $escaper->escapeHtml($lang['Update']);
+                $text_add = $escaper->escapeHtml($lang['Add']);
+                $text_delete = $escaper->escapeHtml($lang['Delete']);
+                $text_deleteItem = $escaper->escapeHtml($lang['DeleteItemNamed']);
+                $text_addItem = $escaper->escapeHtml($lang['AddNewItemNamed']);
 
-    <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
-        <script src="../js/jquery.min.js"></script>
-        <script src="../js/popper.min.js"></script>
-        <script src="../js/bootstrap.min.js"></script>
-        <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-        <link rel="stylesheet" href="../css/bootstrap.css">
-        <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-
-        <link rel="stylesheet" href="../css/divshot-util.css">
-        <link rel="stylesheet" href="../css/divshot-canvas.css">
-        <link rel="stylesheet" href="../css/display.css">
-
-        <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-        <link rel="stylesheet" href="../css/theme.css">
-        <?php
-            setup_alert_requirements("..");
-        ?>
-    </head>
-
-    <body>
-
-        <?php
-            view_top_menu("Configure");
-
-            // Get any alert messages
-            get_alert();
-        ?>
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="span3">
-                  <?php view_configure_menu("AddAndRemoveValues"); ?>
-                </div>
-                <div class="span9">
-                    <div class="row-fluid">
-                        <b><?php echo $escaper->escapeHtml($lang['Select']) ?>: </b>
-                        <select id="table-sections">
-                            <?php
-                                foreach($tableConfig as $table => $config){
-                                    echo "<option value='".$table."'>". $escaper->escapeHtml($lang[$config['headerKey']]) ."</option>\n";
-                                }
-                            ?>
-                        </select>
-                    </div>
-                    <div class="row-fluid">
-                        <div id="crud-wrapper" class="span12">
-                            <?php
-                                $text_change = $escaper->escapeHtml($lang['Change']);
-                                $text_to = $escaper->escapeHtml($lang['to']);
-                                $text_update = $escaper->escapeHtml($lang['Update']);
-                                $text_add = $escaper->escapeHtml($lang['Add']);
-                                $text_delete = $escaper->escapeHtml($lang['Delete']);
-                                $text_deleteItem = $escaper->escapeHtml($lang['DeleteItemNamed']);
-                                $text_addItem = $escaper->escapeHtml($lang['AddNewItemNamed']);
-
-                                foreach ($tableConfig as $table => $config) {
-                                    if($table == "review")
-                                    {
-                                        $display = "display: block;";
-                                    }
-                                    else
-                                    {
-                                        $display = "display: none;";
-                                    }
-                                    echo "
+                foreach ($tableConfig as $table => $config) {
+                  if($table == "review") {
+                    $display = "display: block;";
+                  } else {
+                    $display = "display: none;";
+                  }
+                  echo "
                                     <div class='hero-unit' data-table_name='" . $table . "' style='{$display}'>\n
                                         <p>\n
                                             <h4>" . $escaper->escapeHtml($lang[$config['headerKey']]) . ":</h4>\n
@@ -369,19 +360,19 @@
                                             create_dropdown($table, NULL, $table . "_delete");
                                     echo "&nbsp;&nbsp;<input type='submit' value='" . $text_delete . "' data-action='delete' />
                                         </p>
-                                    </div>";
-                                }
-                            ?>
-                        </div>
-                    </div>
-                </div>
+                                     </div>";
+                }
+              ?>
             </div>
+          </div>
         </div>
-        <script>
-
-            function refreshDropdown(dropdown, data) {
-                dropdown.empty();
-                dropdown.append($('<option>', {
+      </div>
+    </div>
+    <script>
+      
+      function refreshDropdown(dropdown, data) {
+        dropdown.empty();
+        dropdown.append($('<option>', {
                     value: 0,
                     text : "--"
                 }));
@@ -391,44 +382,43 @@
                         text : item.name
                     }));
                 });
-            }
+      }
 
-            function crudAction() {
+      function crudAction() {
 
-                var div = $(this).closest('div');
-                if (div) {
-                    var tableName = div.data('table_name');
-                    var action = $(this).data('action');
+        var div = $(this).closest('div');
+        if (div) {
+          var tableName = div.data('table_name');
+          var action = $(this).data('action');
 
-                    if (tableName && action) {
-                        $.ajax({
-                            type: "POST",
-                            url: window.location.href,
-                            data: (function() {
-                                var d = new Object();
-                                d.table_name = tableName;
-                                d.action = action;
+          if (tableName && action) {
+            $.ajax({
+                    type: "POST",
+                    url: window.location.href,
+                    data: (function() {
+                             var d = new Object();
+                             d.table_name = tableName;
+                             d.action = action;
 
-                                switch(action) {
-                                    case "add":
-                                        d.name = div.find('#' + tableName + '_new').val();
-                                        break;
-                                    case "update":
-                                        d.id = div.find('#' + tableName + '_update_from').val();
-                                        d.name = div.find('#' + tableName + '_update_to').val();
-                                        break;
-                                    case "delete":
-                                        d.id = div.find('#' + tableName + '_delete').val();
-                                        break;
-                                }
+                             switch(action) {
+                               case "add":
+                                 d.name = div.find('#' + tableName + '_new').val();
+                                 break;
+                               case "update":
+                                 d.id = div.find('#' + tableName + '_update_from').val();
+                                 d.name = div.find('#' + tableName + '_update_to').val();
+                                 break;
+                               case "delete":
+                                 d.id = div.find('#' + tableName + '_delete').val();
+                                 break;
+                             }
 
-                                return d;
-                            })(),
-
-                            success: function(data){
-                                if(data.status_message){
-                                    showAlertsFromArray(data.status_message);
-                                }
+                             return d;
+                           })(),
+                    success: function(data) {
+                               if(data.status_message){
+                                 showAlertsFromArray(data.status_message);
+                               }
 
                                 // Empty input boxes
                                 div.find('#' + tableName + '_new').val("");
@@ -437,29 +427,27 @@
                                 // Refresh dropdowns
                                 refreshDropdown(div.find('#' + tableName + '_update_from'), data.data);
                                 refreshDropdown(div.find('#' + tableName + '_delete'), data.data);
-                            },
-                            error: function(xhr,status,error){
-                                if(xhr.responseJSON && xhr.responseJSON.status_message){
-                                    showAlertsFromArray(xhr.responseJSON.status_message);
-                                }
-                                if(!retryCSRF(xhr, this))
-                                {
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-
-            $(document).ready(function() {
-                $('#crud-wrapper input[type="submit"]').click(crudAction);
-                
-                $('#table-sections').change(function(){
-                    $("#crud-wrapper > .hero-unit").fadeOut(100);
-                    $("#crud-wrapper > [data-table_name='"+$(this).val()+"']").fadeIn(1000);
-                })
+                              },
+                    error: function(xhr,status,error){
+                             if(xhr.responseJSON && xhr.responseJSON.status_message) {
+                               showAlertsFromArray(xhr.responseJSON.status_message);
+                             }
+                             if(!retryCSRF(xhr, this)) {
+                             }
+                           }
             });
+          }
+        }
+      }
 
-        </script>
-    </body>
+      $(document).ready(function() {
+        $('#crud-wrapper input[type="submit"]').click(crudAction);                
+        $('#table-sections').change(function() {
+          $("#crud-wrapper > .hero-unit").fadeOut(100);
+          $("#crud-wrapper > [data-table_name='"+$(this).val()+"']").fadeIn(1000);
+        });
+      });
+
+    </script>
+  </body>
 </html>

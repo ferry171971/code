@@ -160,31 +160,25 @@
 
 <!doctype html>
 <html>
-
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
+    <link rel="stylesheet" media="screen" type="text/css" href="../css/colorpicker.css" />
+    <link rel="stylesheet" href="../css/settings_tabs.css">
+    <link rel="stylesheet" href="../css/divshot-util.css">
+    <link rel="stylesheet" href="../css/divshot-canvas.css">
+    <link rel="stylesheet" href="../css/display.css">
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
     <script src="../js/jquery.min.js"></script>
     <script src="../js/popper.min.js"></script>
     <script src="../js/bootstrap.min.js"></script>
     <script src="../js/common.js"></script>
     <script type="text/javascript" src="../js/colorpicker.js"></script>
-
-    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-    <link rel="stylesheet" href="../css/bootstrap.css">
-    <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-    <link rel="stylesheet" media="screen" type="text/css" href="../css/colorpicker.css" />
-    <link rel="stylesheet" href="../css/settings_tabs.css">
-    
-
-    <link rel="stylesheet" href="../css/divshot-util.css">
-    <link rel="stylesheet" href="../css/divshot-canvas.css">
-    <link rel="stylesheet" href="../css/display.css">
-
-    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="../css/theme.css">
-
     <style type="text/css">
         .text-rotation {
             display: block;
@@ -200,65 +194,57 @@
             padding: 2px 10px;
         }
     </style>
-
     <?php
         setup_alert_requirements("..");
     ?>    
   </head>
-
   <body>
-
-<?php
-    view_top_menu("Configure");
-
-    // Get any alert messages
-    get_alert();
-?>
-       
+    <?php
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
+    ?>       
     <div class="container-fluid">
-      <div class="row-fluid">
-        <div class="span3">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3">
           <?php view_configure_menu("ConfigureRiskFormula"); ?>
         </div>
-        <div class="span9">
-            <div class="row-fluid">
-                <div class="span12">
-                    <div class="risk-levels-container">
-                        <div class="wrap">
-                            <ul class="tabs group">
-                              <li><a class="active" href="#/risk-levels"><?php echo $escaper->escapeHtml($lang['RiskLevels']); ?></a></li>
-                              <li style="width: 200px;"><a href="#/classic-risk-formula"><?php echo $escaper->escapeHtml($lang['ClassicRiskFormula']); ?></a></li>
-                              <li style="width: 200px;"><a href="#/contributing-risk-formula"><?php echo $escaper->escapeHtml($lang['ContributingRiskFormula']); ?></a></li>
-                            </ul>
-                                      
-                        </div>
-                        <div id="content">
-                            <div id="risk-levels">
-                                <?php $risk_levels = get_risk_levels(); ?>
-
-                                <?php displayEditableLineFor('RiskLevelTextTop', $risk_levels, 3); ?>
-                                <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 2); ?>
-                                <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 1); ?>
-                                <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 0); ?>
-                            </div>
-                            <div id="classic-risk-formula" style="display: none;">
-                                <?php create_risk_formula_table(); ?>
-                            </div>
-                            <div id="contributing-risk-formula" style="display: none;">
-                                <?php display_contributing_risk_formula(); ?>
-                            </div>
-                        </div>
-                    </div>
+        <div class="col-lg-9 col-md-9 col-sm-9">
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="risk-levels-container">
+                <div class="wrap">
+                  <ul class="tabs group">
+                    <li><a class="active" href="#/risk-levels"><?php echo $escaper->escapeHtml($lang['RiskLevels']); ?></a></li>
+                    <li style="width: 200px;"><a href="#/classic-risk-formula"><?php echo $escaper->escapeHtml($lang['ClassicRiskFormula']); ?></a></li>
+                    <li style="width: 200px;"><a href="#/contributing-risk-formula"><?php echo $escaper->escapeHtml($lang['ContributingRiskFormula']); ?></a></li>
+                  </ul>
                 </div>
-            </div>
-              
-            <div class="row-fluid">
-                <div class="span12">
-                  <div class="">
-                    <?php echo "<p><font size=\"1\">* " . $escaper->escapeHtml($lang['AllRiskScoresAreAdjusted']) . "</font></p>"; ?>
+                <div id="content">
+                  <div id="risk-levels">
+                    <?php $risk_levels = get_risk_levels(); ?>
+                    <?php displayEditableLineFor('RiskLevelTextTop', $risk_levels, 3); ?>
+                    <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 2); ?>
+                    <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 1); ?>
+                    <?php displayEditableLineFor('RiskLevelTextRest', $risk_levels, 0); ?>
+                  </div>
+                  <div id="classic-risk-formula" style="display: none;">
+                    <?php create_risk_formula_table(); ?>
+                  </div>
+                  <div id="contributing-risk-formula" style="display: none;">
+                    <?php display_contributing_risk_formula(); ?>
                   </div>
                 </div>
+              </div>
             </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12">
+              <div class="">
+                <?php echo "<p><font size=\"1\">* " . $escaper->escapeHtml($lang['AllRiskScoresAreAdjusted']) . "</font></p>"; ?>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -406,7 +392,5 @@
             });
         });
     </script>
-
   </body>
-
 </html>

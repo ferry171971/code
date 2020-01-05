@@ -468,27 +468,24 @@
 
 <!doctype html>
 <html>
-
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=10,9,7,8">
-    <script src="../js/jquery.min.js"></script>
-    <script src="../js/popper.min.js"></script>
-    <script src="../js/jquery-ui.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SimpleRisk: Enterprise Risk Management Simplified</title>
     <link rel="stylesheet" type="text/css" href="../css/jquery-ui.min.css" />
     <link rel="stylesheet" href="../css/bootstrap.css">
     <link rel="stylesheet" href="../css/bootstrap-responsive.css">
-
     <link rel="stylesheet" href="../css/divshot-util.css">
     <link rel="stylesheet" href="../css/divshot-canvas.css">
     <link rel="stylesheet" href="../css/display.css">
-
     <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="../css/theme.css">
     <link rel="stylesheet" href="../css/settings_tabs.css">
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/jquery-ui.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>    
     <?php
         setup_alert_requirements("..");
     ?>    
@@ -549,15 +546,12 @@
       }
     </script>
   </head>
-
   <body>
-
-<?php
-    view_top_menu("Configure");
-
-    // Get any alert messages
-    get_alert();
-?>
+    <?php
+      view_top_menu("Configure");
+      // Get any alert messages
+      get_alert();
+    ?>
     <div class="container-fluid">
       <div class="row">
         <div class="col-lg-3 col-md-3 col-sm-3">
